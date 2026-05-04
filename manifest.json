@@ -1,0 +1,16 @@
+{
+  "short_name": "首爾探險",
+  "name": "Seoul Trip Planner 2026",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/826/826070.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#F8F9F8",
+  "display": "standalone",
+  "theme_color": "#4E4848"
+}
