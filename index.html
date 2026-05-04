@@ -3,115 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Seoul 2026</title>
+    <title>Seoul Trip 2026</title>
     <style>
-        :root { --bg: #F4EDE6; --primary: #4E3629; }
-        body { background: var(--bg); color: var(--primary); font-family: sans-serif; margin: 0; padding: 15px; padding-bottom: 80px; }
-        .tab-nav { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 15px; }
-        .tab-btn { padding: 10px; border: none; background: #FFF; border-radius: 10px; white-space: nowrap; flex: 1; font-weight: bold; }
-        .tab-btn.active { background: #DBCAB7; }
-        .section { display: none; } .section.active { display: block; }
-        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 15px; border: 1px solid #DDD; border-radius: 8px; font-size: 16px; background: #FAFAFA; }
-        .btn-add { background: #B9D1EA; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; margin-bottom: 20px; }
-        .btn-save { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
+        :root { --bg: #F4EDE6; --primary: #4E3629; --accent: #DBCAB7; --naver: #03C75A; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--primary); margin: 0; padding-bottom: 100px; }
+        
+        /* 頁籤導覽 */
+        .tabs { display: flex; background: white; position: sticky; top: 0; z-index: 100; padding: 10px; gap: 8px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .tab-btn { padding: 10px 18px; border: none; background: #F8F8F8; border-radius: 12px; white-space: nowrap; font-weight: bold; color: #999; }
+        .tab-btn.active { background: var(--accent); color: var(--primary); }
+
+        .section { display: none; padding: 20px; }
+        .section.active { display: block; }
+        
+        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
+        .btn-add { background: #B9D1EA; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; margin-bottom: 20px; font-size: 16px; color: #444; }
+        
+        /* 日期顯示 */
+        .day-tag { display: inline-block; background: var(--primary); color: white; padding: 2px 10px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; }
+        
+        /* 記帳樣式 */
+        .wallet-sum { background: var(--primary); color: white; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 20px; }
+        .tag { font-size: 11px; padding: 3px 8px; border-radius: 5px; background: #F0F0F0; margin-right: 5px; }
+        .tag-tax { background: #FFD54F; color: #000; }
+        .tag-pay { background: #E1F5FE; color: #0288D1; }
+
+        /* 彈窗 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; z-index: 9999; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-height: 80vh; overflow-y: auto; padding: 20px; border-radius: 20px; }
-        .item-row { border-bottom: 1px solid #EEE; padding: 10px 0; position: relative; }
+        .modal-content { background: white; width: 100%; border-radius: 25px 25px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        input, select, textarea { width: 100%; padding: 14px; margin: 8px 0 16px; border: 1px solid #EEE; border-radius: 12px; font-size: 16px; background: #FAFAFA; }
+        .btn-save { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
-    <div class="tab-nav">
-        <button class="tab-btn active" onclick="go('f')">✈️ 航班</button>
-        <button class="tab-btn" onclick="go('t')">📋 行前</button>
-        <button class="tab-btn" onclick="go('p')">📍 景點</button>
-        <button class="tab-btn" onclick="go('w')">💰 記帳</button>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="go('f', this)">✈️ 航班</button>
+        <button class="tab-btn" onclick="go('t', this)">📋 行前</button>
+        <button class="tab-btn" onclick="go('p', this)">📍 景點行程</button>
+        <button class="tab-btn" onclick="go('w', this)">💰 記帳換匯</button>
     </div>
 
-    <!-- 各分頁內容 -->
+    <!-- 航班分頁 -->
     <div id="sec-f" class="section active">
-        <div class="card"><h3>去程</h3><p id="f-out"></p><hr><h3>回程</h3><p id="f-in"></p>
-        <button onclick="openM('f')" class="btn-add">編輯航班</button></div>
+        <div class="card">
+            <h3>去程 (5/27)</h3><div id="f-out" style="font-size:18px"></div><hr style="opacity:0.1">
+            <h3>回程 (6/2)</h3><div id="f-in" style="font-size:18px"></div>
+            <button onclick="openM('f')" class="btn-add" style="margin-top:20px">+ 編輯航班資訊</button>
+        </div>
     </div>
+
+    <!-- 行前分頁 -->
     <div id="sec-t" class="section">
-        <button onclick="openM('t')" class="btn-add">+ 新增行前清單</button>
+        <button onclick="openM('t')" class="btn-add">+ 新增行前準備事項</button>
         <div id="list-t"></div>
     </div>
+
+    <!-- 景點分頁 -->
     <div id="sec-p" class="section">
+        <div style="background:#FFF; padding:10px; border-radius:10px; margin-bottom:15px; font-size:13px; text-align:center;">🗓️ 2026/05/27 - 06/02</div>
         <button onclick="openM('p')" class="btn-add">+ 新增景點行程</button>
         <div id="list-p"></div>
     </div>
+
+    <!-- 記帳分頁 -->
     <div id="sec-w" class="section">
-        <div class="card" style="background:var(--primary); color:white; text-align:center;">
-            <div style="font-size:24px">NT$ <span id="total-w">0</span></div>
+        <div class="wallet-sum">
+            <div style="opacity:0.7; font-size:14px">總支出約略 (TWD)</div>
+            <div style="font-size:32px; font-weight:bold; margin:5px 0">NT$ <span id="total-w">0</span></div>
+            <div style="font-size:11px; opacity:0.5">匯率估計：1 KRW = 0.024 TWD</div>
         </div>
-        <button onclick="openM('w')" class="btn-add">+ 新增記帳</button>
+        <button onclick="openM('w')" class="btn-add">+ 新增開銷 (含分類/退稅)</button>
         <div id="list-w"></div>
     </div>
 
-    <!-- 彈出編輯視窗 -->
+    <!-- 統一彈窗 -->
     <div class="modal" id="modal">
         <div class="modal-content">
-            <h2 id="m-title"></h2>
+            <h2 id="m-title" style="margin:0 0 20px 0">編輯內容</h2>
             <div id="m-body"></div>
-            <button class="btn-save" onclick="save()">儲存確認</button>
-            <button onclick="closeM()" style="width:100%; border:none; background:none; margin-top:10px; color:#999;">取消</button>
+            <button class="btn-save" onclick="save()">確認儲存</button>
+            <button onclick="closeM()" style="width:100%; border:none; background:none; margin-top:15px; color:#999;">取消</button>
         </div>
     </div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('Seoul_V3') || '{"f":{"out":"","in":""},"t":[],"p":[],"w":[]}');
+        let db = JSON.parse(localStorage.getItem('SeoulTrip_Final_V4') || '{"f":{"out":"","in":""},"t":[],"p":[],"w":[]}');
         let cur = '';
 
-        function go(id) {
+        function go(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById('sec-'+id).classList.add('active');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+            btn.classList.add('active');
         }
 
         function render() {
-            document.getElementById('f-out').innerText = db.f.out || '未設定';
-            document.getElementById('f-in').innerText = db.f.in || '未設定';
+            document.getElementById('f-out').innerText = db.f.out || '點擊下方編輯...';
+            document.getElementById('f-in').innerText = db.f.in || '點擊下方編輯...';
             
-            document.getElementById('list-t').innerHTML = db.t.map((x,i) => `<div class="item-row" onclick="del('t',${i})">☐ ${x} (長按刪除)</div>`).join('');
+            document.getElementById('list-t').innerHTML = db.t.map((x,i) => `
+                <div class="card" onclick="del('t',${i})"><b>☐ ${x}</b> <span style="float:right; color:#CCC; font-size:12px;">長按刪除</span></div>
+            `).join('');
             
             db.p.sort((a,b)=>a.d - b.d);
+            const days = ["", "5/27(三)", "5/28(四)", "5/29(五)", "5/30(六)", "5/31(日)", "6/01(一)", "6/02(二)"];
             document.getElementById('list-p').innerHTML = db.p.map((x,i) => `
-                <div class="card" onclick="del('p',${i})"><b>Day ${x.d} - ${x.t}</b><br>${x.n}<br>
-                ${x.l ? `<a href="${x.l}" target="_blank">Naver Map</a>` : ''}</div>`).join('');
+                <div class="card" onclick="del('p',${i})">
+                    <span class="day-tag">Day ${x.d} | ${days[x.d]}</span>
+                    <div style="font-size:13px; color:#999; margin-bottom:5px;">${x.t}</div>
+                    <h3 style="margin:5px 0">${x.n}</h3>
+                    ${x.l ? `<a href="${x.l}" target="_blank" style="color:var(--naver); text-decoration:none; font-weight:bold;">🔗 Naver Map</a>` : ''}
+                    ${x.note ? `<p style="font-size:13px; color:#666; background:#F9F9F9; padding:8px; border-radius:8px;">${x.note}</p>` : ''}
+                </div>
+            `).join('');
             
             let total = 0;
             document.getElementById('list-w').innerHTML = db.w.map((x,i) => {
-                total += x.a * 0.024;
-                return `<div class="card" onclick="del('w',${i})"><b>[${x.c}] ${x.n}</b><br>₩${x.a} (${x.p}) ${x.tax==='y'?'[退稅]':''}</div>`
-            }).join('');
-            document.getElementById('total-w').innerText = Math.round(total);
-            
-            localStorage.setItem('Seoul_V3', JSON.stringify(db));
+                total += Number(x.a) * 0.024;
+                return `
+                <div class="card" onclick="del('w',${i})">
+                    <div style="display:flex; justify-content:space-between">
+                        <b>[${x.c}] ${x.n}</b>
+                        <b>₩${Number(x.a).toLocaleString()}</b>
+                    </div>
+                    <div style="margin-top:8px">
+                        <span class="tag tag-pay">${x.p}</span>
+                        ${x.tax==='y' ? '<span class="tag tag-tax">可退稅</span>' : ''}
+                    </div>
+                </div>
+            `}).join('');
+            document.getElementById('total-w').innerText = Math.round(total).toLocaleString();
+            localStorage.setItem('SeoulTrip_Final_V4', JSON.stringify(db));
         }
 
         function openM(m) {
             cur = m; document.getElementById('modal').classList.add('active');
             const b = document.getElementById('m-body');
-            if(m==='f') b.innerHTML = `<input id="v1" placeholder="去程資訊" value="${db.f.out}"><input id="v2" placeholder="回程資訊" value="${db.f.in}">`;
-            if(m==='t') b.innerHTML = `<input id="v1" placeholder="要準備什麼?">`;
-            if(m==='p') b.innerHTML = `<select id="v1"><option value="1">Day 1 (5/27)</option><option value="2">Day 2 (5/28)</option><option value="3">Day 3 (5/29)</option><option value="4">Day 4 (5/30)</option><option value="5">Day 5 (5/31)</option><option value="6">Day 6 (6/1)</option><option value="7">Day 7 (6/2)</option></select><input id="v2" placeholder="時間"><input id="v3" placeholder="景點名稱"><input id="v4" placeholder="Naver Map 連結"><textarea id="v5" placeholder="備註"></textarea>`;
-            if(m==='w') b.innerHTML = `<select id="v0"><option>早餐</option><option>午餐</option><option>晚餐</option><option>衣服</option><option>購物</option></select><input id="v1" placeholder="品項"><input id="v2" type="number" placeholder="金額 (KRW)"><select id="v3"><option>現金</option><option>卡/WOWPASS</option></select><select id="v4"><option value="n">不退稅</option><option value="y">要退稅</option></select>`;
+            if(m==='f') b.innerHTML = `<label>去程資訊</label><input id="v1" value="${db.f.out}"><label>回程資訊</label><input id="v2" value="${db.f.in}">`;
+            if(m==='t') b.innerHTML = `<label>準備項目</label><input id="v1" placeholder="例如：換錢、領Esim">`;
+            if(m==='p') b.innerHTML = `<label>日期</label><select id="v1"><option value="1">5/27 (Day 1)</option><option value="2">5/28 (Day 2)</option><option value="3">5/29 (Day 3)</option><option value="4">5/30 (Day 4)</option><option value="5">5/31 (Day 5)</option><option value="6">6/1 (Day 6)</option><option value="7">6/2 (Day 7)</option></select><label>時間</label><input id="v2" placeholder="例如: 14:30"><label>景點名稱</label><input id="v3"><label>Naver Map 網址</label><input id="v4"><label>備註</label><textarea id="v5"></textarea>`;
+            if(m==='w') b.innerHTML = `<label>類別</label><select id="v0"><option>早餐</option><option>午餐</option><option>晚餐</option><option>宵夜</option><option>衣服</option><option>購物</option><option>交通</option></select><label>項目名稱</label><input id="v1"><label>金額 (KRW)</label><input id="v2" type="number"><label>支付方式</label><select id="v3"><option>現金</option><option>WOWPASS/卡</option></select><label>是否退稅</label><select id="v4"><option value="n">不退稅</option><option value="y">可退稅</option></select>`;
         }
 
         function save() {
+            const v1 = document.getElementById('v1').value;
+            if(!v1 && cur!=='f') return;
             if(cur==='f') { db.f.out = document.getElementById('v1').value; db.f.in = document.getElementById('v2').value; }
-            if(cur==='t') db.t.push(document.getElementById('v1').value);
-            if(cur==='p') db.p.push({d:document.getElementById('v1').value, t:document.getElementById('v2').value, n:document.getElementById('v3').value, l:document.getElementById('v4').value});
-            if(cur==='w') db.w.push({c:document.getElementById('v0').value, n:document.getElementById('v1').value, a:document.getElementById('v2').value, p:document.getElementById('v3').value, tax:document.getElementById('v4').value});
+            if(cur==='t') db.t.push(v1);
+            if(cur==='p') db.p.push({d:document.getElementById('v1').value, t:document.getElementById('v2').value, n:document.getElementById('v3').value, l:document.getElementById('v4').value, note:document.getElementById('v5').value});
+            if(cur==='w') db.w.push({c:document.getElementById('v0').value, n:v1, a:document.getElementById('v2').value, p:document.getElementById('v3').value, tax:document.getElementById('v4').value});
             closeM(); render();
         }
 
-        function del(m,i) { if(confirm('刪除？')) { db[m].splice(i,1); render(); } }
+        function del(m,i) { if(confirm('確定刪除這項紀錄？')) { db[m].splice(i,1); render(); } }
         function closeM() { document.getElementById('modal').classList.remove('active'); }
         render();
     </script>
-</body>
-</html>
+</bo
