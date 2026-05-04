@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Seoul Trip 2026</title>
+    <style>
+        /* 照片 1:1 還原配色與樣式 */
+        :root {
+            --bg: #F4EDE6; /* 奶茶底色 */
+            --primary: #4E3629; /* 深啡色文字 */
+            --card-bg: #FFFFFF;
+            --accent: #E5D6C5; /* 淺咖色選中狀態 */
+            --btn-blue: #B9D1EA; /* 新增按鈕藍色 */
+            --naver: #03C75A;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--primary); margin: 0; padding-bottom: 100px; }
+
+        /* 上方日期滑動區 */
+        .day-scroller { display: flex; gap: 12px; overflow-x: auto; padding: 25px 20px; scrollbar-width: none; }
+        .day-btn { 
+            min-width: 80px; height: 100px; background: var(--card-bg); border-radius: 24px; border: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.6;
+        }
+        .day-btn.active { opacity: 1; background: #DBCAB7; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .day-btn b { font-size: 16px; margin-bottom: 5px; }
+
+        /* 標題與新增按鈕 */
+        .section-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .section-header h2 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+        .section-header h2::before { content: ""; width: 4px; height: 20px; background: #A67B5B; border-radius: 2px; }
+        .add-btn { background: var(--btn-blue); color: white; border: none; padding: 8px 18px; border-radius: 20px; font-weight: bold; }
+
+        /* 卡片設計 */
+        .card { background: white; border-radius: 28px; padding: 20px; margin: 0 20px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .todo-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #F2F2F7; }
+        .checkbox { width: 24px; height: 24px; border: 2.5px solid #D1D1D6; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .checkbox.checked { background: #8E8E93; border-color: #8E8E93; }
+        .checkbox.checked::after { content: "✓"; color: white; font-weight: bold; }
+
+        /* 班機/行程卡片 (IMG_1617) */
+        .plan-card { position: relative; overflow: hidden; }
+        .plan-tag { background: #FFB38E; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .naver-link { background: var(--naver); color: white; width: 100%; display: block; text-align: center; padding: 16px; border-radius: 18px; text-decoration: none; font-weight: 800; margin: 20px 0; }
+
+        /* 彈出視窗 (IMG_1618) */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; z-index: 2000; }
+        .modal.active { display: flex; }
+        .modal-body { background: white; width: 100%; border-radius: 35px 35px 0 0; padding: 35px; animation: slideUp 0.3s cubic-bezier(0, 0, 0.2, 1); }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .modal-title { font-size: 24px; font-weight: bold; margin-bottom: 30px; display: flex; justify-content: space-between; }
+        .input-group { margin-bottom: 25px; }
+        .input-group label { display: block; color: var(--sub-text); font-size: 14px; margin-bottom: 10px; opacity: 0.7; }
+        input { width: 100%; background: #F7F7F9; border: none; padding: 18px; border-radius: 16px; font-size: 16px; color: var(--primary); }
+        .save-btn { background: var(--primary); color: white; width: 100%; border: none; padding: 20px; border-radius: 18px; font-weight: bold; font-size: 18px; margin-top: 10px; }
+
+        /* 導覽列 */
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 15px 0 30px; border-top: 1px solid #EEE; }
+        .nav-icon { font-size: 24px; opacity: 0.25; transition: 0.3s; }
+        .nav-icon.active { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="day-scroller" id="dayNav"></div>
+
+    <!-- 頁面內容 -->
+    <div id="page-todo">
+        <div class="section-header">
+            <h2>行前檢查</h2>
+            <button class="add-btn" onclick="openPop('todo')">+ 新增</button>
+        </div>
+        <div class="card" id="todo-list"></div>
+    </div>
+
+    <div id="page-wallet" style="display:none">
+        <div class="section-header"><h2>新增記帳</h2></div>
+        <div class="card">
+            <div class="input-group"><label>項目名稱</label><input type="text" id="w-name" placeholder="例如：午餐"></div>
+            <div class="input-group"><label>金額 (KRW)</label><input type="number" id="w-amount" placeholder="0"></div>
+            <button class="save-btn" onclick="addW()">儲存記帳</button>
+        </div>
+        <div id="expense-list"></div>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-icon active" onclick="go('todo', this)">📋</div>
+        <div class="nav-icon" onclick="go('wallet', this)">💰</div>
+    </nav>
+
+    <!-- 彈窗系統 -->
+    <div class="modal" id="modal">
+        <div class="modal-body">
+            <div class="modal-title"><span id="m-t">新增項目</span><span onclick="closePop()">✕</span></div>
+            <div id="m-content"></div>
+            <button class="save-btn" onclick="save()">儲存</button>
+        </div>
+    </div>
+
+    <script>
+        let curD = 0;
+        let popMode = 'todo';
+        const dStr = ["5/27 WED", "5/28 THU", "5/29 FRI", "5/30 SAT", "5/31 SUN", "6/1 MON", "6/2 TUE"];
+        let db = JSON.parse(localStorage.getItem('TripProV1') || '{"todo":[], "plans":[[],[],[],[],[],[],[]], "expenses":[]}');
+
+        function init() {
+            document.getElementById('dayNav').innerHTML = dStr.map((d, i) => `
+                <button class="day-btn ${i===curD?'active':''}" onclick="curD=${i};init()">
+                    <b>DAY${i+1}</b><span style="font-size:11px">${d.split(' ')[1]}</span>
+                    <div style="font-size:12px; margin-top:5px">${d.split(' ')[0]}</div>
+                </button>
+            `).join('');
+            render();
+        }
+
+        function render() {
+            // 行前清單
+            document.getElementById('todo-list').innerHTML = db.todo.map((t, i) => `
+                <div class="todo-item">
+                    <div class="checkbox ${t.done?'checked':''}" onclick="toggleT(${i})"></div>
+                    <div style="flex:1; ${t.done?'text-decoration:line-through;opacity:0.5':''}">${t.text}</div>
+                </div>
+            `).join('');
+            
+            // 記帳清單
+            if(db.expenses) {
+                document.getElementById('expense-list').innerHTML = db.expenses.map(e => `
+                    <div class="card" style="display:flex; justify-content:space-between">
+                        <b>${e.name}</b><span>₩${e.amount}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function openPop(m) {
+            popMode = m;
+            document.getElementById('m-t').innerText = m==='todo'?'新增行前項目':'新增行程';
+            document.getElementById('m-content').innerHTML = m==='todo' 
+                ? '<div class="input-group"><label>項目</label><input type="text" id="p1" placeholder="買 eSIM"></div>'
+                : '<div class="input-group"><label>時間</label><input type="text" id="p1" placeholder="14:00"></div><div class="input-group"><label>地點</label><input type="text" id="p2" placeholder="LowKey Seongsu"></div>';
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function save() {
+            const v1 = document.getElementById('p1').value;
+            if(!v1) return;
+            if(popMode === 'todo') db.todo.push({text: v1, done: false});
+            localStorage.setItem('TripProV1', JSON.stringify(db));
+            closePop(); init();
+        }
+
+        function toggleT(i) { db.todo[i].done = !db.todo[i].done; localStorage.setItem('TripProV1', JSON.stringify(db)); init(); }
+        function closePop() { document.getElementById('modal').classList.remove('active'); }
+        function go(p, el) {
+            document.getElementById('page-todo').style.display = p==='todo'?'block':'none';
+            document.getElementById('page-wallet').style.display = p==='wallet'?'block':'none';
+            document.querySelectorAll('.nav-icon').forEach(i=>i.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function addW() {
+            const n = document.getElementById('w-name').value;
+            const a = document.getElementById('w-amount').value;
+            if(!n || !a) return;
+            db.expenses.push({name: n, amount: a});
+            localStorage.setItem('TripProV1', JSON.stringify(db));
+            document.getElementById('w-name').value=''; document.getElementById('w-amount').value='';
+            init();
+        }
+        init();
+    </script>
+</body>
+</html>
