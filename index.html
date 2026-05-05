@@ -189,7 +189,6 @@
             btn.classList.add('active');
         }
 
-        // --- 這裡是你要求的修改內容 ---
         function renderPlan() {
             const list = document.getElementById('planList');
             list.innerHTML = db.plan[activeDay].map((p, i) => `
@@ -197,14 +196,11 @@
                     <span class="time-tag">⏰ ${p.time || '--:--'}</span>
                     <h3 style="margin:0">${p.name}</h3>
                     ${p.note ? `
-                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #F2F2F7; font-size: 13px; color: #666; line-height: 1.4;">
-                            ${p.note.replace(/\n/g, '<br>')}
-                        </div>
+                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #F0F0F7; font-size: 13px; color: #666; line-height: 1.5; white-space: pre-wrap;">${p.note}</div>
                     ` : ''}
                 </div>
             `).join('');
         }
-        // ---------------------------
 
         function openDetail(i) {
             editingIdx = i;
