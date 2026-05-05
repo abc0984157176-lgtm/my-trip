@@ -4,312 +4,222 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>旅行行程管理工具</title>
+<title>旅行管理工具</title>
 
-<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Noto+Sans+TC:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter&family=Noto+Sans+TC&display=swap" rel="stylesheet">
 
 <style>
-body {
-    font-family: 'Inter', 'Noto Sans TC', sans-serif;
-    background:#F8F9F8;
-}
-.active {
-    color:#C97D60;
-}
+body{font-family:'Inter','Noto Sans TC';background:#F8F9F8;}
+.active{color:#C97D60;}
 </style>
 </head>
 
 <body class="flex justify-center">
+<div class="max-w-md w-full pb-24">
 
-<div class="w-full max-w-md min-h-screen pb-24">
+<!-- ================= 行程 ================= -->
+<div id="plan" class="tab p-4 space-y-4">
 
-<!-- ================= PLAN ================= -->
-<div id="plan" class="tab">
+<h2 class="font-semibold text-lg">✈️ 航班資訊</h2>
 
-<header class="sticky top-0 bg-white p-4 shadow z-10">
-    <h1 class="text-lg font-semibold text-[#4E4848]">首爾之旅</h1>
-    <p class="text-sm text-[#A89F94]">2026/5/27 - 6/2</p>
-</header>
+<input id="flight" placeholder="例：高雄→仁川 07:05"
+class="w-full border p-2 rounded">
 
-<div class="p-4 space-y-4">
+<button onclick="saveFlight()" class="w-full bg-[#4E4848] text-white py-2 rounded">儲存</button>
 
-<div class="bg-white rounded-xl p-4 shadow">
-<h2 class="font-semibold text-[#4E4848] mb-3">Day 1</h2>
+<div id="flightDisplay" class="text-sm"></div>
 
-<div class="space-y-3 text-sm">
+<hr>
 
-<div>
-<span class="text-[#C97D60] font-semibold">07:05</span> ✈️ 出發
-</div>
+<h2 class="font-semibold">📅 行程（5/27-6/2）</h2>
 
-<div>
-<span class="text-[#C97D60] font-semibold">12:00</span> 弘大商圈
-</div>
+<input id="date" type="date" class="w-full border p-2 rounded">
+<input id="place" placeholder="景點名稱" class="w-full border p-2 rounded mt-2">
+<input id="link" placeholder="Naver Map連結" class="w-full border p-2 rounded mt-2">
 
-<details class="text-[#A89F94]">
-<summary class="cursor-pointer">餐廳 / 購物</summary>
-<ul class="mt-2 space-y-1">
-<li>Garlic Boy</li>
-<li>Pop Mart</li>
-<li>弘大商店街</li>
-</ul>
-</details>
+<button onclick="addPlan()" class="w-full bg-[#C97D60] text-white py-2 rounded mt-2">新增行程</button>
+
+<div id="planList" class="space-y-2"></div>
 
 </div>
 
-<div class="mt-4 p-3 bg-[#F8F9F8] rounded-lg text-sm">
-<div>🏨 弘大住宿</div>
-<a href="https://maps.google.com" target="_blank" class="text-blue-500 text-xs">
-查看地圖
-</a>
-</div>
-
-</div>
-
-</div>
-</div>
-
-<!-- ================= WALLET ================= -->
+<!-- ================= 記帳 ================= -->
 <div id="wallet" class="tab hidden p-4 space-y-4">
 
-<div class="bg-white p-4 rounded-xl shadow">
-<h2 class="font-semibold mb-2">匯率換算（韓幣）</h2>
+<h2 class="font-semibold">💱 匯率換算</h2>
+<input id="krw" placeholder="韓幣算式" class="w-full border p-2 rounded">
+<input id="rate" value="0.024" class="w-full border p-2 rounded mt-2">
+<button onclick="convert()" class="w-full bg-[#4E4848] text-white py-2 rounded mt-2">換算</button>
+<p id="result"></p>
 
-<input id="krw" placeholder="輸入算式 ex: 10000+5000"
-class="w-full border p-2 rounded mb-2">
+<hr>
 
-<input id="rate" type="number" value="0.024"
-class="w-full border p-2 rounded mb-2">
+<h2 class="font-semibold">💰 記帳</h2>
 
-<button onclick="convert()" class="w-full bg-[#4E4848] text-white py-2 rounded">
-換算台幣
-</button>
+<input id="item" placeholder="品項" class="w-full border p-2 rounded">
+<input id="money" placeholder="韓幣" class="w-full border p-2 rounded mt-2">
 
-<p id="result" class="mt-2 text-sm"></p>
-</div>
+<select id="type" class="w-full border p-2 rounded mt-2">
+<option>早餐</option>
+<option>午餐</option>
+<option>晚餐</option>
+<option>購物</option>
+<option>交通</option>
+</select>
 
-<div class="bg-white p-4 rounded-xl shadow">
-<h2 class="font-semibold mb-2">新增帳目</h2>
+<select id="exchange" class="w-full border p-2 rounded mt-2">
+<option>未換匯</option>
+<option>已換匯</option>
+</select>
 
-<input type="file" id="photo" accept="image/*" capture="environment" class="mb-2">
+<button onclick="addExpense()" class="w-full bg-[#C97D60] text-white py-2 rounded mt-2">新增</button>
 
-<input id="item" placeholder="品項"
-class="w-full border p-2 rounded mb-2">
-
-<input id="amount" placeholder="韓幣"
-class="w-full border p-2 rounded mb-2">
-
-<button onclick="addExpense()" class="w-full bg-[#C97D60] text-white py-2 rounded">
-新增
-</button>
-</div>
-
-<div id="history" class="space-y-2"></div>
+<div id="expenseList"></div>
 
 </div>
 
-<!-- ================= LIST ================= -->
-<div id="lists" class="tab hidden p-4 space-y-4">
+<!-- ================= 準備 ================= -->
+<div id="prep" class="tab hidden p-4 space-y-4">
 
-<div class="bg-white p-4 rounded-xl shadow">
-<h2 class="font-semibold mb-2">必備物品</h2>
-<div id="must"></div>
+<h2 class="font-semibold">🧳 行前準備</h2>
 
-<input id="mustInput" class="w-full border p-2 rounded mt-2" placeholder="新增">
-<button onclick="addItem('must')" class="mt-2 w-full bg-[#4E4848] text-white py-2 rounded">新增</button>
-</div>
+<input id="prepInput" placeholder="新增項目"
+class="w-full border p-2 rounded">
 
-<div class="bg-white p-4 rounded-xl shadow">
-<h2 class="font-semibold mb-2">必買清單</h2>
-<div id="buy"></div>
+<button onclick="addPrep()" class="w-full bg-[#4E4848] text-white py-2 rounded">新增</button>
 
-<input id="buyInput" class="w-full border p-2 rounded mt-2" placeholder="新增">
-<button onclick="addItem('buy')" class="mt-2 w-full bg-[#4E4848] text-white py-2 rounded">新增</button>
-</div>
-
-<div class="bg-white p-4 rounded-xl shadow">
-<h2 class="font-semibold mb-2">Memo</h2>
-<textarea id="memo" class="w-full border p-2 rounded" rows="4"></textarea>
-</div>
-
-</div>
-
-<!-- ================= INFO ================= -->
-<div id="info" class="tab hidden p-4 space-y-4">
-
-<div class="bg-white p-4 rounded-xl shadow space-y-2">
-
-<a href="https://weather.com" target="_blank"
-class="block bg-[#4E4848] text-white py-2 rounded text-center">
-天氣
-</a>
-
-<a href="https://www.visitkorea.or.kr" target="_blank"
-class="block bg-[#A89F94] text-white py-2 rounded text-center">
-官方旅遊
-</a>
-
-</div>
-
-<div class="bg-white p-4 rounded-xl shadow text-sm">
-<h2 class="font-semibold mb-2">緊急聯絡</h2>
-<p>警察：112</p>
-<p>救護：119</p>
-</div>
+<div id="prepList"></div>
 
 </div>
 
 </div>
 
-<!-- ================= NAV ================= -->
-<div class="fixed bottom-0 w-full max-w-md bg-white border-t flex justify-around py-2">
+<!-- ================= 底部 ================= -->
+<div class="fixed bottom-0 max-w-md w-full bg-white border-t flex justify-around py-2">
 
-<button onclick="switchTab('plan',this)" class="active">
-<i class="fa-solid fa-map"></i><br>行程
-</button>
-
-<button onclick="switchTab('wallet',this)">
-<i class="fa-solid fa-wallet"></i><br>記帳
-</button>
-
-<button onclick="switchTab('lists',this)">
-<i class="fa-solid fa-list"></i><br>清單
-</button>
-
-<button onclick="switchTab('info',this)">
-<i class="fa-solid fa-circle-info"></i><br>資訊
-</button>
+<button onclick="tab('plan',this)" class="active">行程</button>
+<button onclick="tab('wallet',this)">記帳</button>
+<button onclick="tab('prep',this)">準備</button>
 
 </div>
 
 <script>
 
-// Tab切換
-function switchTab(id, el){
-    document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-
-    document.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-    el.classList.add('active');
+// tab
+function tab(id,el){
+document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
+document.getElementById(id).classList.remove('hidden');
+document.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+el.classList.add('active');
 }
 
-// 安全算式
-function safeEval(str){
-    if(!/^[0-9+\-*/(). ]+$/.test(str)) return 0;
-    return Function('"use strict";return ('+str+')')();
+// 航班
+function saveFlight(){
+let f=document.getElementById('flight').value;
+localStorage.setItem('flight',f);
+showFlight();
+}
+function showFlight(){
+document.getElementById('flightDisplay').innerText=
+localStorage.getItem('flight')||"尚未設定";
+}
+
+// 行程
+function addPlan(){
+let d=date.value,p=place.value,l=link.value;
+let list=JSON.parse(localStorage.getItem('plan')||'[]');
+list.push({d,p,l});
+localStorage.setItem('plan',JSON.stringify(list));
+renderPlan();
+}
+function renderPlan(){
+let list=JSON.parse(localStorage.getItem('plan')||'[]');
+let html="";
+list.forEach(x=>{
+html+=`
+<div class="bg-white p-3 rounded shadow text-sm">
+<div>${x.d}</div>
+<div>${x.p}</div>
+<a href="${x.l}" target="_blank" class="text-blue-500">Naver Map</a>
+</div>`;
+});
+planList.innerHTML=html;
 }
 
 // 匯率
+function safe(s){
+if(!/^[0-9+\-*/.]+$/.test(s)) return 0;
+return Function('return '+s)();
+}
 function convert(){
-    let krw = safeEval(document.getElementById('krw').value);
-    let rate = document.getElementById('rate').value;
-    document.getElementById('result').innerText =
-        "台幣: " + (krw * rate).toFixed(2);
+let r=rate.value;
+let k=safe(krw.value);
+result.innerText="台幣："+(k*r).toFixed(2);
 }
 
 // 記帳
 function addExpense(){
-    let item = document.getElementById('item').value;
-    let amount = document.getElementById('amount').value;
-    let file = document.getElementById('photo').files[0];
-
-    let reader = new FileReader();
-    reader.onload = function(){
-        let data = {
-            item, amount,
-            photo: reader.result,
-            time: new Date().toLocaleString()
-        };
-
-        let list = JSON.parse(localStorage.getItem('exp')||'[]');
-        list.push(data);
-        localStorage.setItem('exp',JSON.stringify(list));
-        render();
-    }
-
-    if(file){ reader.readAsDataURL(file); }
+let data={
+item:item.value,
+money:money.value,
+type:type.value,
+exchange:exchange.value,
+time:new Date().toLocaleString()
+};
+let list=JSON.parse(localStorage.getItem('exp')||'[]');
+list.push(data);
+localStorage.setItem('exp',JSON.stringify(list));
+renderExp();
 }
 
-// 顯示帳目
-function render(){
-    let list = JSON.parse(localStorage.getItem('exp')||'[]');
-    let html="";
-    list.forEach((e,i)=>{
-        html+=`
-        <div class="bg-white p-3 rounded shadow flex gap-2">
-            <img src="${e.photo}" class="w-12 h-12 rounded object-cover">
-            <div class="flex-1 text-sm">
-                <div>${e.item}</div>
-                <div>${e.amount}₩</div>
-                <div class="text-xs text-gray-400">${e.time}</div>
-            </div>
-            <button onclick="del(${i})" class="text-red-500">X</button>
-        </div>`;
-    });
-    document.getElementById('history').innerHTML=html;
-}
-
-function del(i){
-    let list=JSON.parse(localStorage.getItem('exp'));
-    list.splice(i,1);
-    localStorage.setItem('exp',JSON.stringify(list));
-    render();
-}
-
-// 清單
-function addItem(type){
-    let input=document.getElementById(type+'Input');
-    let val=input.value;
-    if(!val) return;
-
-    let list=JSON.parse(localStorage.getItem(type)||'[]');
-    list.push({text:val,done:false});
-    localStorage.setItem(type,JSON.stringify(list));
-    input.value="";
-    renderList();
-}
-
-function toggle(type,i){
-    let list=JSON.parse(localStorage.getItem(type));
-    list[i].done=!list[i].done;
-    localStorage.setItem(type,JSON.stringify(list));
-    renderList();
-}
-
-function renderList(){
-    ['must','buy'].forEach(type=>{
-        let data=JSON.parse(localStorage.getItem(type)||'[]');
-        let html="";
-        data.forEach((d,i)=>{
-            html+=`
-            <label class="flex gap-2 ${d.done?'line-through text-gray-400':''}">
-                <input type="checkbox" ${d.done?'checked':''}
-                onchange="toggle('${type}',${i})">
-                ${d.text}
-            </label>`;
-        });
-        document.getElementById(type).innerHTML=html;
-    });
-}
-
-// memo
-document.getElementById('memo').value =
-    localStorage.getItem('memo')||'';
-
-document.getElementById('memo').addEventListener('input',e=>{
-    localStorage.setItem('memo',e.target.value);
+function renderExp(){
+let list=JSON.parse(localStorage.getItem('exp')||'[]');
+let html="";
+list.forEach(x=>{
+html+=`
+<div class="bg-white p-3 rounded shadow text-sm">
+<div>${x.item} - ${x.money}₩</div>
+<div>${x.type}｜${x.exchange}</div>
+<div class="text-xs text-gray-400">${x.time}</div>
+</div>`;
 });
+expenseList.innerHTML=html;
+}
+
+// 準備
+function addPrep(){
+let val=prepInput.value;
+let list=JSON.parse(localStorage.getItem('prep')||'[]');
+list.push({text:val,done:false});
+localStorage.setItem('prep',JSON.stringify(list));
+renderPrep();
+}
+function togglePrep(i){
+let list=JSON.parse(localStorage.getItem('prep'));
+list[i].done=!list[i].done;
+localStorage.setItem('prep',JSON.stringify(list));
+renderPrep();
+}
+function renderPrep(){
+let list=JSON.parse(localStorage.getItem('prep')||'[]');
+let html="";
+list.forEach((x,i)=>{
+html+=`
+<label class="flex gap-2 ${x.done?'line-through text-gray-400':''}">
+<input type="checkbox" ${x.done?'checked':''} onchange="togglePrep(${i})">
+${x.text}
+</label>`;
+});
+prepList.innerHTML=html;
+}
 
 // init
-render();
-renderList();
+showFlight();
+renderPlan();
+renderExp();
+renderPrep();
 
 </script>
 
