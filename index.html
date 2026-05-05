@@ -5,20 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Seoul 2026 Ultimate v2</title>
     <link rel="icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6eb_1f1f0_1f1f7/512.png">
-
-<link rel="apple-touch-icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6eb_1f1f0_1f1f7/512.png">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Seoul 2026">
+    <link rel="apple-touch-icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6eb_1f1f0_1f1f7/512.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Seoul 2026">
 
     <style>
-        .card div {
-    display: -webkit-box;
-    -webkit-line-clamp: 3; /* 最多顯示三行 */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
         :root { --bg: #F2F2F7; --primary: #4E3629; --accent: #333; --naver: #03C75A; --red: #E57373; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--primary); margin: 0; padding-bottom: 120px; }
@@ -130,7 +122,6 @@
         <button class="nav-item" onclick="switchTab('wallet', this)">💳</button>
     </div>
 
-    <!-- 詳情彈窗 -->
     <div class="modal" id="detailModal">
         <div class="modal-body">
             <h2 id="detailTitle">景點名稱</h2>
@@ -142,7 +133,6 @@
         </div>
     </div>
 
-    <!-- 輸入/編輯彈窗 -->
     <div class="modal" id="inputModal">
         <div class="modal-body">
             <h3 id="modalTitle">新增項目</h3>
@@ -153,14 +143,13 @@
     </div>
 
     <script>
-        let RATE = 0.024; // 預設值
+        let RATE = 0.024;
         let activeDay = 0;
-        let editingIdx = null; // 用於追蹤正在編輯的項目
+        let editingIdx = null;
         let db = JSON.parse(localStorage.getItem('SeoulTrip_Final')) || {
             plan: [[],[],[],[],[],[],[]], wallet: [], todo: [], budget: 50000, flight: "", flightTime: ""
         };
 
-        // 即時匯率更新
         async function fetchRate() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/KRW');
@@ -200,15 +189,22 @@
             btn.classList.add('active');
         }
 
+        // --- 這裡是你要求的修改內容 ---
         function renderPlan() {
             const list = document.getElementById('planList');
             list.innerHTML = db.plan[activeDay].map((p, i) => `
                 <div class="card" onclick="openDetail(${i})">
                     <span class="time-tag">⏰ ${p.time || '--:--'}</span>
                     <h3 style="margin:0">${p.name}</h3>
+                    ${p.note ? `
+                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #F2F2F7; font-size: 13px; color: #666; line-height: 1.4;">
+                            ${p.note.replace(/\n/g, '<br>')}
+                        </div>
+                    ` : ''}
                 </div>
             `).join('');
         }
+        // ---------------------------
 
         function openDetail(i) {
             editingIdx = i;
@@ -220,7 +216,6 @@
             btn.style.display = item.link ? 'flex' : 'none';
             btn.onclick = () => window.location.href = item.link;
 
-            // 編輯與刪除按鈕功能
             document.getElementById('editItemBtn').onclick = () => {
                 closeModal('detailModal');
                 openInputModal('p', i);
@@ -228,18 +223,9 @@
             document.getElementById('delItemBtn').onclick = () => {
                 if(confirm("確定要刪除這個景點嗎？")) {
                     db.plan[activeDay].splice(i, 1);
-                    save(); renderPlan();         function renderPlan() {
-            const list = document.getElementById('planList');
-            list.innerHTML = db.plan[activeDay].map((p, i) => `
-                <div class="card" onclick="openDetail(${i})">
-                    <span class="time-tag">⏰ ${p.time || '--:--'}</span>
-                    <h3 style="margin:0">${p.name}</h3>
-                    <!-- 下面是新增的註記顯示區塊 -->
-                    ${p.note ? `<div style="font-size: 13px; color: #777; margin-top: 8px; border-top: 1px solid #f0f0f0; pt: 8px; padding-top: 5px;">${p.note.replace(/\n/g, '<br>')}</div>` : ''}
-                </div>
-            `).join('');
-        }
-
+                    save(); renderPlan(); closeModal('detailModal');
+                }
+            };
             
             document.getElementById('detailModal').classList.add('active');
         }
@@ -255,7 +241,7 @@
             if(type==='p') {
                 const data = editIndex !== null ? db.plan[activeDay][editIndex] : {time:'', name:'', link:'', note:''};
                 title.innerText = editIndex !== null ? "編輯景點" : "新增項目";
-                f.innerHTML = `<label>時間</label><input id="i1" type="time" value="${data.time}"><label>名稱</label><input id="i2" value="${data.name}"><label>Naver連結</label><input id="i3" value="${data.link}"><label>備註</label><textarea id="i4">${data.note}</textarea>`;
+                f.innerHTML = `<label>時間</label><input id="i1" type="time" value="${data.time}"><label>名稱</label><input id="i2" value="${data.name}"><label>Naver連結</label><input id="i3" value="${data.link}"><label>備註</label><textarea id="i4" placeholder="在這裡輸入註記...">${data.note}</textarea>`;
             } else if(type==='w') {
                 f.innerHTML = `<label>日期</label><input id="i1" type="date" value="${new Date().toISOString().split('T')[0]}"><label>品項</label><input id="i2"><label>金額 (KRW)</label><input id="i3" type="number">`;
             } else if(type==='t') {
