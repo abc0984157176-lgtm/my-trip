@@ -4,41 +4,117 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Travel Ultimate</title>
+<title>Travel Design</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter&family=Noto+Sans+TC&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+TC:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:'Inter','Noto Sans TC';background:#F8F9F8;}
-.card{background:#fff;border-radius:18px;box-shadow:0 6px 18px rgba(0,0,0,0.06);}
-.day{padding:8px 14px;border-radius:12px;background:#EDEAE6;}
-.active{background:#4E4848;color:white;}
-.sheet{position:fixed;left:0;right:0;bottom:-100%;transition:.35s;}
+body{
+font-family:'Inter','Noto Sans TC';
+background:#F3EFEA;
+letter-spacing:0.2px;
+}
+
+/* 日期卡 */
+.day{
+min-width:80px;
+padding:12px;
+border-radius:18px;
+background:#EAE4DC;
+text-align:center;
+transition:.2s;
+}
+.day.active{
+background:#4E4848;
+color:#fff;
+transform:scale(1.05);
+}
+
+/* 卡片 */
+.card{
+background:#fff;
+border-radius:20px;
+padding:16px;
+box-shadow:0 10px 25px rgba(0,0,0,0.06);
+}
+
+/* list item */
+.item{
+background:#F6F6F6;
+border-radius:14px;
+padding:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+transition:.2s;
+}
+.item:active{
+transform:scale(0.97);
+}
+
+/* overlay */
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.25);
+backdrop-filter:blur(10px);
+opacity:0;
+pointer-events:none;
+transition:.3s;
+}
+.overlay.show{
+opacity:1;
+pointer-events:auto;
+}
+
+/* bottom sheet */
+.sheet{
+position:fixed;
+left:0;right:0;
+bottom:-100%;
+background:#fff;
+border-radius:28px 28px 0 0;
+padding:20px;
+transition:.35s cubic-bezier(.25,.8,.25,1);
+}
 .sheet.show{bottom:0;}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);backdrop-filter:blur(8px);opacity:0;pointer-events:none;}
-.overlay.show{opacity:1;pointer-events:auto;}
+
+.handle{
+width:40px;height:4px;
+background:#ccc;
+border-radius:10px;
+margin:auto;margin-bottom:10px;
+}
+
+/* Naver按鈕 */
+.naver{
+background:#03C75A;
+color:white;
+padding:14px;
+border-radius:16px;
+text-align:center;
+font-weight:600;
+box-shadow:0 6px 12px rgba(3,199,90,0.3);
+}
+.naver:active{transform:scale(0.97);}
+
 </style>
 </head>
 
 <body class="flex justify-center">
-<div class="max-w-md w-full p-4 pb-28 space-y-4">
+<div class="max-w-md w-full p-4 pb-24 space-y-4">
 
 <!-- 日期 -->
 <div id="days" class="flex gap-2 overflow-x-auto"></div>
 
 <!-- 行程新增 -->
-<div class="card p-4 space-y-2">
-<input id="time" placeholder="時間" class="w-full border p-2 rounded">
-<input id="title" placeholder="地點" class="w-full border p-2 rounded">
+<div class="card space-y-2">
+<input id="time" placeholder="14:00" class="w-full border p-2 rounded">
+<input id="title" placeholder="地點名稱" class="w-full border p-2 rounded">
+<input id="addr" placeholder="地址" class="w-full border p-2 rounded">
 <input id="map" placeholder="Naver Map連結" class="w-full border p-2 rounded">
-
-<select id="type" class="w-full border p-2 rounded">
-<option>FOOD</option>
-<option>CAFE</option>
-<option>SHOP</option>
-<option>SPOT</option>
-</select>
+<textarea id="menu" placeholder="推薦餐點" class="w-full border p-2 rounded"></textarea>
 
 <button onclick="addPlan()" class="w-full bg-[#C97D60] text-white py-2 rounded">
 新增行程
@@ -46,122 +122,148 @@ body{font-family:'Inter','Noto Sans TC';background:#F8F9F8;}
 </div>
 
 <!-- 行程列表 -->
-<div id="planList"></div>
-
-<!-- 記帳 -->
-<div class="card p-4">
-<h2 class="font-semibold mb-2">記帳</h2>
-
-<input id="money" placeholder="韓幣" class="w-full border p-2 rounded mb-2">
-
-<select id="payType" class="w-full border p-2 rounded mb-2">
-<option>早餐</option>
-<option>午餐</option>
-<option>晚餐</option>
-<option>購物</option>
-<option>交通</option>
-</select>
-
-<select id="exchange" class="w-full border p-2 rounded mb-2">
-<option>未換匯</option>
-<option>已換匯</option>
-</select>
-
-<button onclick="addExpense()" class="w-full bg-[#4E4848] text-white py-2 rounded">
-新增花費
-</button>
-
-<div id="total" class="mt-2 text-sm"></div>
-</div>
+<div id="planList" class="space-y-2"></div>
 
 </div>
 
-<!-- 遮罩 -->
+<!-- overlay -->
 <div id="overlay" class="overlay" onclick="closeSheet()"></div>
 
-<!-- Bottom Sheet -->
-<div id="sheet" class="sheet bg-white rounded-t-3xl p-5">
-<div id="dTitle" class="text-xl font-semibold"></div>
-<a id="dMap" target="_blank" class="block bg-green-500 text-white text-center py-3 rounded mt-3">
-開啟地圖
+<!-- bottom sheet -->
+<div id="sheet" class="sheet">
+
+<div class="handle"></div>
+
+<div class="flex justify-between mb-2">
+<div class="bg-orange-400 text-white text-xs px-2 py-1 rounded">FOOD</div>
+<button onclick="closeSheet()">✕</button>
+</div>
+
+<div id="dTime" class="text-gray-400"></div>
+
+<input id="editTitle" class="text-xl font-semibold w-full mb-1 border-b">
+<input id="editAddr" class="text-sm text-gray-500 w-full mb-3 border-b">
+
+<a id="dMap" target="_blank" class="naver mb-3">
+📍 NAVER MAP
 </a>
+
+<div class="text-xs text-gray-400 mb-1">RECOMMENDED</div>
+<textarea id="editMenu" class="w-full bg-gray-100 p-3 rounded"></textarea>
+
+<button onclick="saveEdit()" class="mt-3 w-full bg-black text-white py-2 rounded">
+儲存
+</button>
+
 </div>
 
 <script>
 
 // 日期
-let days=["5/27","5/28","5/29","5/30","5/31","6/1","6/2"];
-let currentDay="5/27";
+let days=["MON 5/27","TUE 5/28","WED 5/29","THU 5/30","FRI 5/31","SAT 6/1","SUN 6/2"];
+let current=0;
 
 function renderDays(){
 let html="";
-days.forEach(d=>{
-html+=`<div onclick="selectDay('${d}')"
-class="day ${d==currentDay?'active':''}">${d}</div>`;
+days.forEach((d,i)=>{
+html+=`<div onclick="selectDay(${i})"
+class="day ${i==current?'active':''}">
+${d}
+</div>`;
 });
-days.innerHTML=html;
+document.getElementById("days").innerHTML=html;
 }
 renderDays();
 
-// 資料
-function getData(){return JSON.parse(localStorage.getItem('data')||'{}');}
-function saveData(d){localStorage.setItem('data',JSON.stringify(d));}
+function selectDay(i){
+current=i;
+renderDays();
+renderPlan();
+}
 
-// 行程
+// 資料
+function getData(){return JSON.parse(localStorage.getItem('plan')||'{}');}
+function saveData(d){localStorage.setItem('plan',JSON.stringify(d));}
+
+// 新增
 function addPlan(){
 let d=getData();
-if(!d[currentDay]) d[currentDay]=[];
-d[currentDay].push({time:time.value,title:title.value,map:map.value});
+if(!d[current]) d[current]=[];
+
+d[current].push({
+time:time.value,
+title:title.value,
+addr:addr.value,
+map:map.value,
+menu:menu.value
+});
+
 saveData(d);
 renderPlan();
 }
 
+// 顯示
 function renderPlan(){
-let d=getData()[currentDay]||[];
+let d=getData()[current]||[];
 let html="";
 d.forEach((x,i)=>{
 html+=`
-<div onclick="openSheet(${i})" class="card p-3 mb-2">
-<div class="text-[#C97D60]">${x.time}</div>
+<div onclick="openSheet(${i})" class="item">
+<div>
+<div class="text-[#C97D60] text-sm">${x.time}</div>
 <div>${x.title}</div>
+</div>
 </div>`;
 });
 planList.innerHTML=html;
 }
 
-// Sheet
+// sheet
+let currentIndex=0;
+
 function openSheet(i){
-let d=getData()[currentDay][i];
-dTitle.innerText=d.title;
+currentIndex=i;
+let d=getData()[current][i];
+
+dTime.innerText=d.time;
+editTitle.value=d.title;
+editAddr.value=d.addr;
+editMenu.value=d.menu;
 dMap.href=d.map;
+
 overlay.classList.add("show");
 sheet.classList.add("show");
 }
+
+// 關閉
 function closeSheet(){
 overlay.classList.remove("show");
 sheet.classList.remove("show");
 }
 
-// 記帳
-function addExpense(){
-let list=JSON.parse(localStorage.getItem('exp')||'[]');
-list.push({money:money.value,day:currentDay});
-localStorage.setItem('exp',JSON.stringify(list));
-calc();
-}
-
-function calc(){
-let list=JSON.parse(localStorage.getItem('exp')||'[]');
-let sum=0;
-list.forEach(x=>{
-if(x.day==currentDay) sum+=Number(x.money);
+// 滑動關閉
+let startY=0;
+sheet.addEventListener("touchstart",e=>startY=e.touches[0].clientY);
+sheet.addEventListener("touchmove",e=>{
+if(e.touches[0].clientY-startY>80) closeSheet();
 });
-total.innerText="今日花費："+sum+"₩";
+
+// 儲存編輯
+function saveEdit(){
+let d=getData();
+let item=d[current][currentIndex];
+
+item.title=editTitle.value;
+item.addr=editAddr.value;
+item.menu=editMenu.value;
+
+saveData(d);
+renderPlan();
+closeSheet();
 }
 
 // init
 renderPlan();
-calc();
 
 </script>
 
