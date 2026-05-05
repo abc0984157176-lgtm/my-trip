@@ -13,6 +13,12 @@
 <meta name="apple-mobile-web-app-title" content="Seoul 2026">
 
     <style>
+        .card div {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* 最多顯示三行 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
         :root { --bg: #F2F2F7; --primary: #4E3629; --accent: #333; --naver: #03C75A; --red: #E57373; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
         body { background: var(--bg); color: var(--primary); margin: 0; padding-bottom: 120px; }
@@ -222,9 +228,18 @@
             document.getElementById('delItemBtn').onclick = () => {
                 if(confirm("確定要刪除這個景點嗎？")) {
                     db.plan[activeDay].splice(i, 1);
-                    save(); renderPlan(); closeModal('detailModal');
-                }
-            };
+                    save(); renderPlan();         function renderPlan() {
+            const list = document.getElementById('planList');
+            list.innerHTML = db.plan[activeDay].map((p, i) => `
+                <div class="card" onclick="openDetail(${i})">
+                    <span class="time-tag">⏰ ${p.time || '--:--'}</span>
+                    <h3 style="margin:0">${p.name}</h3>
+                    <!-- 下面是新增的註記顯示區塊 -->
+                    ${p.note ? `<div style="font-size: 13px; color: #777; margin-top: 8px; border-top: 1px solid #f0f0f0; pt: 8px; padding-top: 5px;">${p.note.replace(/\n/g, '<br>')}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
             
             document.getElementById('detailModal').classList.add('active');
         }
