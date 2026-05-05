@@ -1,165 +1,317 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Seoul Trip 2026</title>
-    <style>
-        :root { --bg: #F4EDE6; --primary: #4E3629; --accent: #DBCAB7; --naver: #03C75A; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--primary); margin: 0; padding-bottom: 100px; }
-        
-        /* 頁籤導覽 */
-        .tabs { display: flex; background: white; position: sticky; top: 0; z-index: 100; padding: 10px; gap: 8px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .tab-btn { padding: 10px 18px; border: none; background: #F8F8F8; border-radius: 12px; white-space: nowrap; font-weight: bold; color: #999; }
-        .tab-btn.active { background: var(--accent); color: var(--primary); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .section { display: none; padding: 20px; }
-        .section.active { display: block; }
-        
-        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02); }
-        .btn-add { background: #B9D1EA; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: bold; margin-bottom: 20px; font-size: 16px; color: #444; }
-        
-        /* 日期顯示 */
-        .day-tag { display: inline-block; background: var(--primary); color: white; padding: 2px 10px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; }
-        
-        /* 記帳樣式 */
-        .wallet-sum { background: var(--primary); color: white; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 20px; }
-        .tag { font-size: 11px; padding: 3px 8px; border-radius: 5px; background: #F0F0F0; margin-right: 5px; }
-        .tag-tax { background: #FFD54F; color: #000; }
-        .tag-pay { background: #E1F5FE; color: #0288D1; }
+<title>旅行行程管理工具</title>
 
-        /* 彈窗 */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: flex-end; z-index: 9999; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; border-radius: 25px 25px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto; }
-        input, select, textarea { width: 100%; padding: 14px; margin: 8px 0 16px; border: 1px solid #EEE; border-radius: 12px; font-size: 16px; background: #FAFAFA; }
-        .btn-save { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; font-size: 16px; }
-    </style>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Noto+Sans+TC:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    background:#F8F9F8;
+}
+.active {
+    color:#C97D60;
+}
+</style>
 </head>
-<body>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="go('f', this)">✈️ 航班</button>
-        <button class="tab-btn" onclick="go('t', this)">📋 行前</button>
-        <button class="tab-btn" onclick="go('p', this)">📍 景點行程</button>
-        <button class="tab-btn" onclick="go('w', this)">💰 記帳換匯</button>
-    </div>
+<body class="flex justify-center">
 
-    <!-- 航班分頁 -->
-    <div id="sec-f" class="section active">
-        <div class="card">
-            <h3>去程 (5/27)</h3><div id="f-out" style="font-size:18px"></div><hr style="opacity:0.1">
-            <h3>回程 (6/2)</h3><div id="f-in" style="font-size:18px"></div>
-            <button onclick="openM('f')" class="btn-add" style="margin-top:20px">+ 編輯航班資訊</button>
-        </div>
-    </div>
+<div class="w-full max-w-md min-h-screen pb-24">
 
-    <!-- 行前分頁 -->
-    <div id="sec-t" class="section">
-        <button onclick="openM('t')" class="btn-add">+ 新增行前準備事項</button>
-        <div id="list-t"></div>
-    </div>
+<!-- ================= PLAN ================= -->
+<div id="plan" class="tab">
 
-    <!-- 景點分頁 -->
-    <div id="sec-p" class="section">
-        <div style="background:#FFF; padding:10px; border-radius:10px; margin-bottom:15px; font-size:13px; text-align:center;">🗓️ 2026/05/27 - 06/02</div>
-        <button onclick="openM('p')" class="btn-add">+ 新增景點行程</button>
-        <div id="list-p"></div>
-    </div>
+<header class="sticky top-0 bg-white p-4 shadow z-10">
+    <h1 class="text-lg font-semibold text-[#4E4848]">首爾之旅</h1>
+    <p class="text-sm text-[#A89F94]">2026/5/27 - 6/2</p>
+</header>
 
-    <!-- 記帳分頁 -->
-    <div id="sec-w" class="section">
-        <div class="wallet-sum">
-            <div style="opacity:0.7; font-size:14px">總支出約略 (TWD)</div>
-            <div style="font-size:32px; font-weight:bold; margin:5px 0">NT$ <span id="total-w">0</span></div>
-            <div style="font-size:11px; opacity:0.5">匯率估計：1 KRW = 0.024 TWD</div>
-        </div>
-        <button onclick="openM('w')" class="btn-add">+ 新增開銷 (含分類/退稅)</button>
-        <div id="list-w"></div>
-    </div>
+<div class="p-4 space-y-4">
 
-    <!-- 統一彈窗 -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <h2 id="m-title" style="margin:0 0 20px 0">編輯內容</h2>
-            <div id="m-body"></div>
-            <button class="btn-save" onclick="save()">確認儲存</button>
-            <button onclick="closeM()" style="width:100%; border:none; background:none; margin-top:15px; color:#999;">取消</button>
-        </div>
-    </div>
+<div class="bg-white rounded-xl p-4 shadow">
+<h2 class="font-semibold text-[#4E4848] mb-3">Day 1</h2>
 
-    <script>
-        let db = JSON.parse(localStorage.getItem('SeoulTrip_Final_V4') || '{"f":{"out":"","in":""},"t":[],"p":[],"w":[]}');
-        let cur = '';
+<div class="space-y-3 text-sm">
 
-        function go(id, btn) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById('sec-'+id).classList.add('active');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
+<div>
+<span class="text-[#C97D60] font-semibold">07:05</span> ✈️ 出發
+</div>
 
-        function render() {
-            document.getElementById('f-out').innerText = db.f.out || '點擊下方編輯...';
-            document.getElementById('f-in').innerText = db.f.in || '點擊下方編輯...';
-            
-            document.getElementById('list-t').innerHTML = db.t.map((x,i) => `
-                <div class="card" onclick="del('t',${i})"><b>☐ ${x}</b> <span style="float:right; color:#CCC; font-size:12px;">長按刪除</span></div>
-            `).join('');
-            
-            db.p.sort((a,b)=>a.d - b.d);
-            const days = ["", "5/27(三)", "5/28(四)", "5/29(五)", "5/30(六)", "5/31(日)", "6/01(一)", "6/02(二)"];
-            document.getElementById('list-p').innerHTML = db.p.map((x,i) => `
-                <div class="card" onclick="del('p',${i})">
-                    <span class="day-tag">Day ${x.d} | ${days[x.d]}</span>
-                    <div style="font-size:13px; color:#999; margin-bottom:5px;">${x.t}</div>
-                    <h3 style="margin:5px 0">${x.n}</h3>
-                    ${x.l ? `<a href="${x.l}" target="_blank" style="color:var(--naver); text-decoration:none; font-weight:bold;">🔗 Naver Map</a>` : ''}
-                    ${x.note ? `<p style="font-size:13px; color:#666; background:#F9F9F9; padding:8px; border-radius:8px;">${x.note}</p>` : ''}
-                </div>
-            `).join('');
-            
-            let total = 0;
-            document.getElementById('list-w').innerHTML = db.w.map((x,i) => {
-                total += Number(x.a) * 0.024;
-                return `
-                <div class="card" onclick="del('w',${i})">
-                    <div style="display:flex; justify-content:space-between">
-                        <b>[${x.c}] ${x.n}</b>
-                        <b>₩${Number(x.a).toLocaleString()}</b>
-                    </div>
-                    <div style="margin-top:8px">
-                        <span class="tag tag-pay">${x.p}</span>
-                        ${x.tax==='y' ? '<span class="tag tag-tax">可退稅</span>' : ''}
-                    </div>
-                </div>
-            `}).join('');
-            document.getElementById('total-w').innerText = Math.round(total).toLocaleString();
-            localStorage.setItem('SeoulTrip_Final_V4', JSON.stringify(db));
-        }
+<div>
+<span class="text-[#C97D60] font-semibold">12:00</span> 弘大商圈
+</div>
 
-        function openM(m) {
-            cur = m; document.getElementById('modal').classList.add('active');
-            const b = document.getElementById('m-body');
-            if(m==='f') b.innerHTML = `<label>去程資訊</label><input id="v1" value="${db.f.out}"><label>回程資訊</label><input id="v2" value="${db.f.in}">`;
-            if(m==='t') b.innerHTML = `<label>準備項目</label><input id="v1" placeholder="例如：換錢、領Esim">`;
-            if(m==='p') b.innerHTML = `<label>日期</label><select id="v1"><option value="1">5/27 (Day 1)</option><option value="2">5/28 (Day 2)</option><option value="3">5/29 (Day 3)</option><option value="4">5/30 (Day 4)</option><option value="5">5/31 (Day 5)</option><option value="6">6/1 (Day 6)</option><option value="7">6/2 (Day 7)</option></select><label>時間</label><input id="v2" placeholder="例如: 14:30"><label>景點名稱</label><input id="v3"><label>Naver Map 網址</label><input id="v4"><label>備註</label><textarea id="v5"></textarea>`;
-            if(m==='w') b.innerHTML = `<label>類別</label><select id="v0"><option>早餐</option><option>午餐</option><option>晚餐</option><option>宵夜</option><option>衣服</option><option>購物</option><option>交通</option></select><label>項目名稱</label><input id="v1"><label>金額 (KRW)</label><input id="v2" type="number"><label>支付方式</label><select id="v3"><option>現金</option><option>WOWPASS/卡</option></select><label>是否退稅</label><select id="v4"><option value="n">不退稅</option><option value="y">可退稅</option></select>`;
-        }
+<details class="text-[#A89F94]">
+<summary class="cursor-pointer">餐廳 / 購物</summary>
+<ul class="mt-2 space-y-1">
+<li>Garlic Boy</li>
+<li>Pop Mart</li>
+<li>弘大商店街</li>
+</ul>
+</details>
 
-        function save() {
-            const v1 = document.getElementById('v1').value;
-            if(!v1 && cur!=='f') return;
-            if(cur==='f') { db.f.out = document.getElementById('v1').value; db.f.in = document.getElementById('v2').value; }
-            if(cur==='t') db.t.push(v1);
-            if(cur==='p') db.p.push({d:document.getElementById('v1').value, t:document.getElementById('v2').value, n:document.getElementById('v3').value, l:document.getElementById('v4').value, note:document.getElementById('v5').value});
-            if(cur==='w') db.w.push({c:document.getElementById('v0').value, n:v1, a:document.getElementById('v2').value, p:document.getElementById('v3').value, tax:document.getElementById('v4').value});
-            closeM(); render();
-        }
+</div>
 
-        function del(m,i) { if(confirm('確定刪除這項紀錄？')) { db[m].splice(i,1); render(); } }
-        function closeM() { document.getElementById('modal').classList.remove('active'); }
+<div class="mt-4 p-3 bg-[#F8F9F8] rounded-lg text-sm">
+<div>🏨 弘大住宿</div>
+<a href="https://maps.google.com" target="_blank" class="text-blue-500 text-xs">
+查看地圖
+</a>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<!-- ================= WALLET ================= -->
+<div id="wallet" class="tab hidden p-4 space-y-4">
+
+<div class="bg-white p-4 rounded-xl shadow">
+<h2 class="font-semibold mb-2">匯率換算（韓幣）</h2>
+
+<input id="krw" placeholder="輸入算式 ex: 10000+5000"
+class="w-full border p-2 rounded mb-2">
+
+<input id="rate" type="number" value="0.024"
+class="w-full border p-2 rounded mb-2">
+
+<button onclick="convert()" class="w-full bg-[#4E4848] text-white py-2 rounded">
+換算台幣
+</button>
+
+<p id="result" class="mt-2 text-sm"></p>
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow">
+<h2 class="font-semibold mb-2">新增帳目</h2>
+
+<input type="file" id="photo" accept="image/*" capture="environment" class="mb-2">
+
+<input id="item" placeholder="品項"
+class="w-full border p-2 rounded mb-2">
+
+<input id="amount" placeholder="韓幣"
+class="w-full border p-2 rounded mb-2">
+
+<button onclick="addExpense()" class="w-full bg-[#C97D60] text-white py-2 rounded">
+新增
+</button>
+</div>
+
+<div id="history" class="space-y-2"></div>
+
+</div>
+
+<!-- ================= LIST ================= -->
+<div id="lists" class="tab hidden p-4 space-y-4">
+
+<div class="bg-white p-4 rounded-xl shadow">
+<h2 class="font-semibold mb-2">必備物品</h2>
+<div id="must"></div>
+
+<input id="mustInput" class="w-full border p-2 rounded mt-2" placeholder="新增">
+<button onclick="addItem('must')" class="mt-2 w-full bg-[#4E4848] text-white py-2 rounded">新增</button>
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow">
+<h2 class="font-semibold mb-2">必買清單</h2>
+<div id="buy"></div>
+
+<input id="buyInput" class="w-full border p-2 rounded mt-2" placeholder="新增">
+<button onclick="addItem('buy')" class="mt-2 w-full bg-[#4E4848] text-white py-2 rounded">新增</button>
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow">
+<h2 class="font-semibold mb-2">Memo</h2>
+<textarea id="memo" class="w-full border p-2 rounded" rows="4"></textarea>
+</div>
+
+</div>
+
+<!-- ================= INFO ================= -->
+<div id="info" class="tab hidden p-4 space-y-4">
+
+<div class="bg-white p-4 rounded-xl shadow space-y-2">
+
+<a href="https://weather.com" target="_blank"
+class="block bg-[#4E4848] text-white py-2 rounded text-center">
+天氣
+</a>
+
+<a href="https://www.visitkorea.or.kr" target="_blank"
+class="block bg-[#A89F94] text-white py-2 rounded text-center">
+官方旅遊
+</a>
+
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow text-sm">
+<h2 class="font-semibold mb-2">緊急聯絡</h2>
+<p>警察：112</p>
+<p>救護：119</p>
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= NAV ================= -->
+<div class="fixed bottom-0 w-full max-w-md bg-white border-t flex justify-around py-2">
+
+<button onclick="switchTab('plan',this)" class="active">
+<i class="fa-solid fa-map"></i><br>行程
+</button>
+
+<button onclick="switchTab('wallet',this)">
+<i class="fa-solid fa-wallet"></i><br>記帳
+</button>
+
+<button onclick="switchTab('lists',this)">
+<i class="fa-solid fa-list"></i><br>清單
+</button>
+
+<button onclick="switchTab('info',this)">
+<i class="fa-solid fa-circle-info"></i><br>資訊
+</button>
+
+</div>
+
+<script>
+
+// Tab切換
+function switchTab(id, el){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+
+    document.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+}
+
+// 安全算式
+function safeEval(str){
+    if(!/^[0-9+\-*/(). ]+$/.test(str)) return 0;
+    return Function('"use strict";return ('+str+')')();
+}
+
+// 匯率
+function convert(){
+    let krw = safeEval(document.getElementById('krw').value);
+    let rate = document.getElementById('rate').value;
+    document.getElementById('result').innerText =
+        "台幣: " + (krw * rate).toFixed(2);
+}
+
+// 記帳
+function addExpense(){
+    let item = document.getElementById('item').value;
+    let amount = document.getElementById('amount').value;
+    let file = document.getElementById('photo').files[0];
+
+    let reader = new FileReader();
+    reader.onload = function(){
+        let data = {
+            item, amount,
+            photo: reader.result,
+            time: new Date().toLocaleString()
+        };
+
+        let list = JSON.parse(localStorage.getItem('exp')||'[]');
+        list.push(data);
+        localStorage.setItem('exp',JSON.stringify(list));
         render();
-    </script>
-</bo
+    }
+
+    if(file){ reader.readAsDataURL(file); }
+}
+
+// 顯示帳目
+function render(){
+    let list = JSON.parse(localStorage.getItem('exp')||'[]');
+    let html="";
+    list.forEach((e,i)=>{
+        html+=`
+        <div class="bg-white p-3 rounded shadow flex gap-2">
+            <img src="${e.photo}" class="w-12 h-12 rounded object-cover">
+            <div class="flex-1 text-sm">
+                <div>${e.item}</div>
+                <div>${e.amount}₩</div>
+                <div class="text-xs text-gray-400">${e.time}</div>
+            </div>
+            <button onclick="del(${i})" class="text-red-500">X</button>
+        </div>`;
+    });
+    document.getElementById('history').innerHTML=html;
+}
+
+function del(i){
+    let list=JSON.parse(localStorage.getItem('exp'));
+    list.splice(i,1);
+    localStorage.setItem('exp',JSON.stringify(list));
+    render();
+}
+
+// 清單
+function addItem(type){
+    let input=document.getElementById(type+'Input');
+    let val=input.value;
+    if(!val) return;
+
+    let list=JSON.parse(localStorage.getItem(type)||'[]');
+    list.push({text:val,done:false});
+    localStorage.setItem(type,JSON.stringify(list));
+    input.value="";
+    renderList();
+}
+
+function toggle(type,i){
+    let list=JSON.parse(localStorage.getItem(type));
+    list[i].done=!list[i].done;
+    localStorage.setItem(type,JSON.stringify(list));
+    renderList();
+}
+
+function renderList(){
+    ['must','buy'].forEach(type=>{
+        let data=JSON.parse(localStorage.getItem(type)||'[]');
+        let html="";
+        data.forEach((d,i)=>{
+            html+=`
+            <label class="flex gap-2 ${d.done?'line-through text-gray-400':''}">
+                <input type="checkbox" ${d.done?'checked':''}
+                onchange="toggle('${type}',${i})">
+                ${d.text}
+            </label>`;
+        });
+        document.getElementById(type).innerHTML=html;
+    });
+}
+
+// memo
+document.getElementById('memo').value =
+    localStorage.getItem('memo')||'';
+
+document.getElementById('memo').addEventListener('input',e=>{
+    localStorage.setItem('memo',e.target.value);
+});
+
+// init
+render();
+renderList();
+
+</script>
+
+</body>
+</html>
