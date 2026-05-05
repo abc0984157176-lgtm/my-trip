@@ -32,6 +32,17 @@
         .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: relative; }
         .time-tag { color: var(--red); font-size: 13px; font-weight: bold; margin-bottom: 5px; display: block; }
         
+        /* 註記樣式 */
+        .note-display { 
+            margin-top: 10px; 
+            padding-top: 8px; 
+            border-top: 1px solid #F2F2F7; 
+            font-size: 13px; 
+            color: #666; 
+            line-height: 1.4; 
+            white-space: pre-wrap; /* 保持換行 */
+        }
+
         .budget-box { background: var(--primary); color: white; border-radius: 22px; padding: 20px; margin-bottom: 20px; }
         .progress-container { background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; margin: 15px 0; overflow: hidden; }
         .progress-bar { background: var(--red); height: 100%; width: 0%; transition: 0.5s; }
@@ -50,6 +61,7 @@
         .btn-save { background: var(--accent); color: white; padding: 15px; border-radius: 12px; border: none; width: 100%; font-weight: bold; font-size: 16px; }
 
         input, select, textarea { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #EEE; background: #F9F9F9; font-size: 16px; }
+        textarea { height: 100px; resize: none; }
         .todo-item { display: flex; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; }
         .todo-item.done { opacity: 0.5; text-decoration: line-through; }
         #live-rate { font-size: 11px; background: #eee; padding: 2px 8px; border-radius: 10px; margin-left: 5px;}
@@ -122,10 +134,11 @@
         <button class="nav-item" onclick="switchTab('wallet', this)">💳</button>
     </div>
 
+    <!-- 詳情彈窗 -->
     <div class="modal" id="detailModal">
         <div class="modal-body">
             <h2 id="detailTitle">景點名稱</h2>
-            <div id="detailNote" style="color:#666; margin:15px 0;"></div>
+            <div id="detailNote" style="color:#666; margin:15px 0; white-space: pre-wrap;"></div>
             <button id="naverJumpBtn" class="naver-btn">📍 開啟 Naver Map</button>
             <button id="editItemBtn" class="edit-btn">📝 編輯行程內容</button>
             <button id="delItemBtn" class="del-btn">🗑️ 刪除此景點</button>
@@ -133,6 +146,7 @@
         </div>
     </div>
 
+    <!-- 輸入/編輯彈窗 -->
     <div class="modal" id="inputModal">
         <div class="modal-body">
             <h3 id="modalTitle">新增項目</h3>
@@ -189,15 +203,14 @@
             btn.classList.add('active');
         }
 
+        // 修改此處：增加註記顯現邏輯
         function renderPlan() {
             const list = document.getElementById('planList');
             list.innerHTML = db.plan[activeDay].map((p, i) => `
                 <div class="card" onclick="openDetail(${i})">
                     <span class="time-tag">⏰ ${p.time || '--:--'}</span>
                     <h3 style="margin:0">${p.name}</h3>
-                    ${p.note ? `
-                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #F0F0F7; font-size: 13px; color: #666; line-height: 1.5; white-space: pre-wrap;">${p.note}</div>
-                    ` : ''}
+                    ${p.note ? `<div class="note-display">${p.note}</div>` : ''}
                 </div>
             `).join('');
         }
@@ -237,7 +250,7 @@
             if(type==='p') {
                 const data = editIndex !== null ? db.plan[activeDay][editIndex] : {time:'', name:'', link:'', note:''};
                 title.innerText = editIndex !== null ? "編輯景點" : "新增項目";
-                f.innerHTML = `<label>時間</label><input id="i1" type="time" value="${data.time}"><label>名稱</label><input id="i2" value="${data.name}"><label>Naver連結</label><input id="i3" value="${data.link}"><label>備註</label><textarea id="i4" placeholder="在這裡輸入註記...">${data.note}</textarea>`;
+                f.innerHTML = `<label>時間</label><input id="i1" type="time" value="${data.time}"><label>名稱</label><input id="i2" value="${data.name}"><label>Naver連結</label><input id="i3" value="${data.link}"><label>備註 (會直接顯示在卡片上)</label><textarea id="i4">${data.note || ''}</textarea>`;
             } else if(type==='w') {
                 f.innerHTML = `<label>日期</label><input id="i1" type="date" value="${new Date().toISOString().split('T')[0]}"><label>品項</label><input id="i2"><label>金額 (KRW)</label><input id="i3" type="number">`;
             } else if(type==='t') {
