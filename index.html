@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Seoul 2026</title>
+    <title>Seoul 2026 Pro</title>
     <style>
         :root { --bg: #F9F9F9; --primary: #4E3629; --accent: #333; --naver: #03C75A; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
@@ -14,14 +14,20 @@
         .date-range { background: #EEE; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #666; font-weight: bold; }
         .date-picker { display: flex; overflow-x: auto; padding: 10px 20px; gap: 12px; scrollbar-width: none; }
         .date-picker::-webkit-scrollbar { display: none; }
-        .date-item { min-width: 65px; height: 85px; background: white; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .date-item.active { background: var(--accent); color: white; }
+        .date-item { min-width: 65px; height: 85px; background: white; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; }
+        .date-item.active { background: var(--accent); color: white; transform: scale(1.05); }
         .date-item .week { font-size: 10px; opacity: 0.6; margin-bottom: 5px; }
         .date-item .day { font-size: 20px; font-weight: bold; }
         .content { padding: 20px; }
         .day-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .btn-plus { width: 45px; height: 45px; background: #DDD; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; font-size: 24px; }
-        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        
+        /* 行程卡片強化 */
+        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid transparent; }
+        .card.has-time { border-left: 5px solid #E57373; }
+        .card .time-tag { display: inline-block; background: #FFF1F1; color: #E57373; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 5px; margin-bottom: 8px; }
+        .card .note-text { font-size: 13px; color: #777; margin: 8px 0; background: #FDFDFD; padding: 8px; border-radius: 8px; border: 1px dashed #EEE; }
+        
         .btn-move { background: #F5F5F7; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; margin-right: 5px; }
         .flight-status { font-size: 13px; color: #E57373; font-weight: bold; background: #FFF1F1; padding: 10px; border-radius: 10px; margin-top: 10px; }
         .ex-card { background: var(--primary); color: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; }
@@ -31,9 +37,10 @@
         .nav-item.active { color: var(--primary); }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 3000; }
         .modal.active { display: flex; }
-        .modal-body { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px; max-height: 80vh; overflow-y: auto; }
-        input, select { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #EEE; font-size: 16px; background: #F9F9F9; }
-        .btn-save { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: bold; }
+        .modal-body { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px; max-height: 85vh; overflow-y: auto; }
+        label { font-size: 12px; color: #999; margin-left: 5px; }
+        input, select, textarea { width: 100%; padding: 15px; margin: 5px 0 15px 0; border-radius: 12px; border: 1px solid #EEE; font-size: 16px; background: #F9F9F9; }
+        .btn-save { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: bold; font-size: 18px; }
         .todo-item { display: flex; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; }
         .todo-item.done { opacity: 0.5; text-decoration: line-through; }
     </style>
@@ -45,7 +52,7 @@
         <div class="date-range">5/27 - 6/2</div>
     </div>
 
-    <!-- 行程 (🧭) -->
+    <!-- 頁面 1: 行程 (🧭) -->
     <div id="tab-plan" class="tab-content">
         <div class="date-picker" id="datePicker"></div>
         <div class="content">
@@ -57,7 +64,7 @@
         </div>
     </div>
 
-    <!-- 航班/準備 (📝) -->
+    <!-- 頁面 2: 航班/準備 (📝) -->
     <div id="tab-list" class="tab-content" style="display:none">
         <div class="content">
             <h2>✈️ 航班資訊</h2>
@@ -74,11 +81,11 @@
         </div>
     </div>
 
-    <!-- 記帳 (💳) -->
+    <!-- 頁面 3: 記帳 (💳) -->
     <div id="tab-wallet" class="tab-content" style="display:none">
         <div class="content">
             <div class="ex-card">
-                <div style="font-size:14px; opacity:0.8;">💰 匯率換算 (KRW ➔ TWD)</div>
+                <div style="font-size:14px; opacity:0.8;">💰 匯率換算 (0.024)</div>
                 <input type="number" id="krwInput" placeholder="輸入韓元" oninput="calcEx(this.value)">
                 <div id="twdResult" style="margin-top:15px; font-size:24px; font-weight:bold;">≈ NT$ 0</div>
             </div>
@@ -108,7 +115,7 @@
             {d:30, w:'SAT', dt:'5/30'}, {d:31, w:'SUN', dt:'5/31'}, {d:1, w:'MON', dt:'6/1'}, {d:2, w:'TUE', dt:'6/2'}
         ];
         let activeDay = 0;
-        let db = JSON.parse(localStorage.getItem('SeoulV9')) || { plan:[[],[],[],[],[],[],[]], todo:[], wallet:[], flight:"", flightTime:"" };
+        let db = JSON.parse(localStorage.getItem('SeoulV10')) || { plan:[[],[],[],[],[],[],[]], todo:[], wallet:[], flight:"", flightTime:"" };
 
         function init() {
             const picker = document.getElementById('datePicker');
@@ -125,7 +132,7 @@
         function selectDay(i) {
             activeDay = i;
             document.querySelectorAll('.date-item').forEach((el, idx) => el.classList.toggle('active', idx===i));
-            document.getElementById('currentDayTitle').innerText = `Day ${i+1} 行程 (${dateData[i].dt})`;
+            document.getElementById('currentDayTitle').innerText = `Day ${i+1} (${dateData[i].dt})`;
             renderPlan();
         }
 
@@ -138,34 +145,26 @@
 
         function renderPlan() {
             const list = document.getElementById('planList');
-            const dayPlans = db.plan[activeDay] || [];
-            list.innerHTML = dayPlans.map((p, i) => `
-                <div class="card">
+            list.innerHTML = db.plan[activeDay].map((p, i) => `
+                <div class="card ${p.time ? 'has-time' : ''}">
+                    ${p.time ? `<div class="time-tag">⏰ ${p.time}</div>` : ''}
                     <h3 style="margin:0">${p.name}</h3>
-                    ${p.link ? `<a href="${p.link}" target="_blank" style="color:var(--naver); text-decoration:none; font-size:13px; font-weight:bold;">🔗 Naver Map</a>` : ''}
-                    <div style="margin-top:10px">
+                    ${p.note ? `<div class="note-text">📝 ${p.note}</div>` : ''}
+                    ${p.link ? `<a href="${p.link}" target="_blank" style="color:var(--naver); text-decoration:none; font-size:13px; font-weight:bold;">📍 Naver Map</a>` : ''}
+                    <div style="margin-top:12px; display:flex; align-items:center;">
                         <button class="btn-move" onclick="moveP(${i},-1)">↑</button>
                         <button class="btn-move" onclick="moveP(${i},1)">↓</button>
-                        <button class="btn-move" style="color:red" onclick="delP(${i})">刪除</button>
+                        <button class="btn-move" style="margin-left:auto; color:red; opacity:0.5;" onclick="delP(${i})">🗑️</button>
                     </div>
                 </div>
             `).join('');
-        }
-
-        function updateFlightTimer() {
-            if(!db.flightTime) return;
-            const now = new Date(); 
-            const target = new Date(db.flightTime);
-            const diff = (target - now) / 1000 / 60; 
-            document.getElementById('flightCountDown').innerText = diff > 0 ? 
-                `🛫 距離登記/起飛：約 ${Math.floor(diff/60)} 小時 ${Math.floor(diff%60)} 分` : `✈️ 航班已起飛`;
         }
 
         function renderTodo() {
             document.getElementById('todoList').innerHTML = db.todo.map((t, i) => `
                 <div class="todo-item ${t.done?'done':''}" onclick="toggleT(${i})">
                     ${t.done?'✅':'☐'} ${t.text} 
-                    <span style="margin-left:auto; color:red; font-size:12px" onclick="event.stopPropagation(); delT(${i})">刪除</span>
+                    <span style="margin-left:auto; color:#CCC;" onclick="event.stopPropagation(); delT(${i})">✕</span>
                 </div>
             `).join('');
         }
@@ -173,8 +172,8 @@
         function renderWallet() {
             document.getElementById('walletList').innerHTML = db.wallet.map((w, i) => `
                 <div class="card" onclick="delW(${i})">
-                    <b>${w.name}</b> <span style="float:right">₩${Number(w.amount).toLocaleString()}</span>
-                    <div style="font-size:12px; color:#999; margin-top:5px">NT$ ${Math.round(w.amount*0.024)} | ${w.pay}</div>
+                    <b>${w.name}</b> <span style="float:right; color:#E57373;">₩${Number(w.amount).toLocaleString()}</span>
+                    <div style="font-size:12px; color:#999; margin-top:5px">≈ NT$ ${Math.round(w.amount*0.024).toLocaleString()} | ${w.pay}</div>
                 </div>
             `).join('');
         }
@@ -186,36 +185,57 @@
             mType = type;
             document.getElementById('modal').classList.add('active');
             const f = document.getElementById('modalFields');
-            if(type==='p') f.innerHTML = `<input id="i1" placeholder="景點名稱"><input id="i2" placeholder="Naver Map 網址">`;
-            if(type==='t') f.innerHTML = `<input id="i1" placeholder="準備事項">`;
-            if(type==='f') f.innerHTML = `<input id="i1" placeholder="航班號" value="${db.flight}"><label>起飛時間</label><input id="i2" type="datetime-local" value="${db.flightTime || '2026-05-27T07:30'}">`;
-            if(type==='w') f.innerHTML = `<input id="i1" placeholder="品項"><input id="i2" type="number" placeholder="金額 KRW"><select id="i3"><option>現金</option><option>卡片/WOWPASS</option></select>`;
+            if(type==='p') {
+                f.innerHTML = `
+                    <label>預計時間 (選填)</label><input id="it" type="time">
+                    <label>景點名稱</label><input id="i1" placeholder="例如：廣藏市場">
+                    <label>註記 (選填)</label><textarea id="in" placeholder="例如：記得吃生拌牛肉、順熙家綠豆粉餅" rows="2"></textarea>
+                    <label>Naver Map 網址</label><input id="i2" placeholder="貼上連結">
+                `;
+            } else if(type==='t') {
+                f.innerHTML = `<label>項目</label><input id="i1" placeholder="例如：填寫 Q-Code">`;
+            } else if(type==='f') {
+                f.innerHTML = `<label>航班號</label><input id="i1" placeholder="BR170" value="${db.flight}"><label>起飛日期時間</label><input id="i2" type="datetime-local" value="${db.flightTime || '2026-05-27T07:30'}">`;
+            } else if(type==='w') {
+                f.innerHTML = `<label>品項</label><input id="i1" placeholder="便利商店"><label>金額 (KRW)</label><input id="i2" type="number"><label>支付方式</label><select id="i3"><option>現金</option><option>卡片/WOWPASS</option></select>`;
+            }
         }
 
         function handleSave() {
             const v1 = document.getElementById('i1')?.value;
             const v2 = document.getElementById('i2')?.value;
-            if(mType==='p' && v1) db.plan[activeDay].push({name:v1, link:v2});
+            const vt = document.getElementById('it')?.value;
+            const vn = document.getElementById('in')?.value;
+            
+            if(mType==='p' && v1) db.plan[activeDay].push({name:v1, link:v2, time:vt, note:vn});
             if(mType==='t' && v1) db.todo.push({text:v1, done:false});
             if(mType==='f') { db.flight = v1; db.flightTime = v2; }
             if(mType==='w' && v1) db.wallet.push({name:v1, amount:v2, pay:document.getElementById('i3').value});
+            
             closeModal(); saveDB(); renderAll();
         }
 
-        function saveDB() { localStorage.setItem('SeoulV9', JSON.stringify(db)); }
+        function saveDB() { localStorage.setItem('SeoulV10', JSON.stringify(db)); }
         function renderAll() {
             renderPlan(); renderTodo(); renderWallet();
             document.getElementById('flightInfo').innerText = db.flight ? `航班：${db.flight}` : "尚未設定";
             updateFlightTimer();
         }
 
+        function updateFlightTimer() {
+            if(!db.flightTime) return;
+            const now = new Date(); 
+            const target = new Date(db.flightTime);
+            const diff = (target - now) / 1000 / 60; 
+            document.getElementById('flightCountDown').innerText = diff > 0 ? 
+                `🛫 距離起飛：約 ${Math.floor(diff/60)} 小時 ${Math.floor(diff%60)} 分` : `✈️ 旅途愉快！`;
+        }
+
         function toggleT(i) { db.todo[i].done = !db.todo[i].done; saveDB(); renderTodo(); }
         function moveP(i,d) { 
-            let targetIdx = i + d;
-            if(targetIdx >= 0 && targetIdx < db.plan[activeDay].length) {
-                let temp = db.plan[activeDay][i];
-                db.plan[activeDay][i] = db.plan[activeDay][targetIdx];
-                db.plan[activeDay][targetIdx] = temp;
+            let t = i + d;
+            if(t >= 0 && t < db.plan[activeDay].length) {
+                [db.plan[activeDay][i], db.plan[activeDay][t]] = [db.plan[activeDay][t], db.plan[activeDay][i]];
                 saveDB(); renderPlan();
             }
         }
