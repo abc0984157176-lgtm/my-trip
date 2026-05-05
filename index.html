@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Travel App V3.1</title>
+<title>Travel App V5</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -13,15 +13,21 @@ font-family:system-ui;
 background:#F3EFEA;
 }
 
-/* horizontal scroll */
 .row{
 display:flex;
 gap:10px;
 overflow-x:auto;
-padding-bottom:6px;
+padding-bottom:8px;
 }
 
-/* date bar */
+.card{
+background:white;
+border-radius:18px;
+padding:14px;
+box-shadow:0 8px 20px rgba(0,0,0,0.06);
+margin-bottom:12px;
+}
+
 .day{
 min-width:90px;
 padding:10px;
@@ -35,15 +41,6 @@ background:#2f2f2f;
 color:white;
 }
 
-/* card */
-.card{
-background:white;
-border-radius:18px;
-padding:14px;
-box-shadow:0 8px 20px rgba(0,0,0,0.06);
-}
-
-/* item */
 .item{
 background:#F6F6F6;
 padding:10px;
@@ -52,14 +49,7 @@ min-width:180px;
 flex-shrink:0;
 }
 
-/* section title */
-.title{
-font-weight:600;
-margin-bottom:8px;
-}
-
-/* input */
-input{
+input,select{
 width:100%;
 padding:6px;
 border-radius:8px;
@@ -75,23 +65,18 @@ border-radius:10px;
 width:100%;
 margin-top:6px;
 }
+
 .small{font-size:12px;color:#777;}
 </style>
 </head>
 
 <body class="flex justify-center">
 
-<div class="max-w-md w-full p-4 space-y-4 pb-32">
+<div class="max-w-md w-full p-4 pb-32">
 
-<!-- ===== 日期橫向 ===== -->
+<!-- ✈️ 航班 -->
 <div class="card">
-<div class="title">📅 旅遊日期</div>
-<div id="days" class="row"></div>
-</div>
-
-<!-- ===== 航班（固定橫向） ===== -->
-<div class="card">
-<div class="title">✈️ 航班資訊</div>
+<div class="font-bold mb-2">✈️ 航班資訊</div>
 <div id="flightRow" class="row"></div>
 
 <input id="fNo" placeholder="航班號">
@@ -101,30 +86,37 @@ margin-top:6px;
 <button class="btn" onclick="addFlight()">新增航班</button>
 </div>
 
-<!-- ===== 行前準備（橫向） ===== -->
+<!-- 📅 日期 -->
 <div class="card">
-<div class="title">🎒 行前準備</div>
+<div class="font-bold mb-2">📅 旅遊日期</div>
+<div id="days" class="row"></div>
+</div>
+
+<!-- 🎒 行前準備 -->
+<div class="card">
+<div class="font-bold mb-2">🎒 行前準備</div>
 <div id="prepRow" class="row"></div>
 
 <input id="prepInput" placeholder="新增項目">
 <button class="btn" onclick="addPrep()">新增</button>
 </div>
 
-<!-- ===== 行程（橫向卡片） ===== -->
+<!-- 📍 行程 -->
 <div class="card">
-<div class="title">📍 今日行程</div>
-<div id="planRow" class="row"></div>
+<div class="font-bold mb-2">📍 今日行程</div>
 
-<input id="t" placeholder="時間">
-<input id="ti" placeholder="地點">
-<input id="a" placeholder="地址">
-<input id="m" placeholder="Naver Map">
+<input id="time" placeholder="時間">
+<input id="title" placeholder="景點">
+<input id="note" placeholder="註記">
+<input id="map" placeholder="Naver Map">
 <button class="btn" onclick="addPlan()">新增行程</button>
+
+<div id="planRow" class="row mt-2"></div>
 </div>
 
-<!-- ===== 記帳 ===== -->
+<!-- 💰 記帳 -->
 <div class="card">
-<div class="title">💰 記帳</div>
+<div class="font-bold mb-2">💰 記帳 / 預算</div>
 
 <div class="small" id="budgetInfo"></div>
 
@@ -132,9 +124,21 @@ margin-top:6px;
 <button class="btn" onclick="setBudget()">設定預算</button>
 
 <input id="item" placeholder="花費項目">
-<input id="amt" placeholder="金額">
+<input id="amount" placeholder="金額">
 <input id="date" placeholder="日期">
-<button class="btn" onclick="addExp()">新增花費</button>
+
+<select id="pay">
+<option value="cash">現金</option>
+<option value="card">信用卡</option>
+<option value="applepay">Apple Pay</option>
+</select>
+
+<select id="tax">
+<option value="no">未退稅</option>
+<option value="yes">已退稅</option>
+</select>
+
+<button class="btn" onclick="addExpense()">新增花費</button>
 
 <div id="expRow" class="row mt-2"></div>
 </div>
@@ -146,7 +150,7 @@ margin-top:6px;
 let days=["5/27","5/28","5/29","5/30","5/31","6/1","6/2"];
 let current=0;
 
-// ===== date =====
+/* ================= DAYS ================= */
 function renderDays(){
 daysDiv.innerHTML=days.map((d,i)=>
 `<div onclick="current=${i};renderAll()" class="day ${i==current?'active':''}">
@@ -155,18 +159,20 @@ ${d}
 }
 renderDays();
 
-// ===== storage =====
+/* ================= STORAGE ================= */
 function get(k){return JSON.parse(localStorage.getItem(k)||"{}")}
 function set(k,v){localStorage.setItem(k,JSON.stringify(v))}
 
-// ===== flights =====
+/* ================= FLIGHT ================= */
 function addFlight(){
 let d=get("flight");
 if(!d[0]) d[0]=[];
 
 d[0].push({
-no:fNo.value,time:fTime.value,
-from:fFrom.value,to:fTo.value
+no:fNo.value,
+time:fTime.value,
+from:fFrom.value,
+to:fTo.value
 });
 
 set("flight",d);
@@ -183,10 +189,11 @@ flightRow.innerHTML=d.map(x=>
 </div>`).join('');
 }
 
-// ===== prep =====
+/* ================= PREP ================= */
 function addPrep(){
 let d=get("prep");
 if(!d[0]) d[0]=[];
+
 d[0].push({t:prepInput.value});
 set("prep",d);
 renderAll();
@@ -198,16 +205,16 @@ prepRow.innerHTML=d.map(x=>
 `<div class="item">${x.t}</div>`).join('');
 }
 
-// ===== plan =====
+/* ================= PLAN ================= */
 function addPlan(){
 let d=get("plan");
 if(!d[current]) d[current]=[];
 
 d[current].push({
-time:t.value,
-title:ti.value,
-addr:a.value,
-map:m.value
+time:time.value,
+title:title.value,
+note:note.value,
+map:map.value
 });
 
 set("plan",d);
@@ -216,28 +223,32 @@ renderAll();
 
 function renderPlan(){
 let d=get("plan")[current]||[];
+
 planRow.innerHTML=d.map(x=>
 `<div class="item">
 <div class="small">${x.time}</div>
 <div>${x.title}</div>
-<a target="_blank" href="${x.map}">📍 map</a>
+<div class="small">${x.note}</div>
+<a target="_blank" href="${x.map}">📍 Map</a>
 </div>`).join('');
 }
 
-// ===== expense =====
+/* ================= EXPENSE ================= */
 function setBudget(){
 localStorage.setItem("budget",budget.value);
 renderExp();
 }
 
-function addExp(){
+function addExpense(){
 let d=get("exp");
 if(!d[current]) d[current]=[];
 
 d[current].push({
 item:item.value,
-amt:Number(amt.value),
-date:date.value
+amount:Number(amount.value),
+date:date.value,
+pay:pay.value,
+tax:tax.value
 });
 
 set("exp",d);
@@ -246,20 +257,23 @@ renderExp();
 
 function renderExp(){
 let d=get("exp")[current]||[];
-let b=Number(localStorage.getItem("budget")||0);
+let budget=Number(localStorage.getItem("budget")||0);
 
-let total=d.reduce((a,b)=>a+b.amt,0);
-budgetInfo.innerHTML=`已花 ${total} / 剩餘 ${b-total}`;
+let total=d.reduce((a,b)=>a+b.amount,0);
+let remain=budget-total;
+
+budgetInfo.innerHTML=
+`預算：${budget} / 已花：${total} / 剩餘：${remain}`;
 
 expRow.innerHTML=d.map(x=>
 `<div class="item">
 <div>${x.item}</div>
-<div>${x.amt}</div>
-<div class="small">${x.date}</div>
+<div>${x.amount}</div>
+<div class="small">${x.date} | ${x.pay} | 退稅:${x.tax}</div>
 </div>`).join('');
 }
 
-// ===== master =====
+/* ================= MASTER ================= */
 function renderAll(){
 renderDays();
 renderFlight();
