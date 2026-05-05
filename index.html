@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Seoul 2026 Ultimate v2</title>
+    <!-- 強制清理 Service Worker 快取 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) { registration.unregister(); }
+            });
+        }
+    </script>
     <link rel="icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6eb_1f1f0_1f1f7/512.png">
     <link rel="apple-touch-icon" href="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6eb_1f1f0_1f1f7/512.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,77 +26,34 @@
         .header h1 { font-size: 22px; margin: 0; }
         .header h1 span { color: var(--red); }
         .date-range { background: #DDD; padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
-
         .date-picker { display: flex; overflow-x: auto; padding: 10px 20px; gap: 12px; scrollbar-width: none; }
         .date-picker::-webkit-scrollbar { display: none; }
         .date-item { min-width: 65px; height: 85px; background: white; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .date-item.active { background: var(--accent); color: white; }
         .date-item .day { font-size: 20px; font-weight: bold; }
-
         .content { padding: 0 20px; }
         .day-title-row { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; }
         .btn-plus { width: 45px; height: 45px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
         .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); position: relative; }
         .time-tag { color: var(--red); font-size: 13px; font-weight: bold; margin-bottom: 5px; display: block; }
-        
-        /* 註記樣式 */
-        .note-display { 
-            margin-top: 10px; 
-            padding-top: 8px; 
-            border-top: 1px solid #F2F2F7; 
-            font-size: 13px; 
-            color: #666; 
-            line-height: 1.4; 
-            white-space: pre-wrap; /* 保持換行 */
-        }
-
-        .budget-box { background: var(--primary); color: white; border-radius: 22px; padding: 20px; margin-bottom: 20px; }
-        .progress-container { background: rgba(255,255,255,0.2); height: 8px; border-radius: 4px; margin: 15px 0; overflow: hidden; }
-        .progress-bar { background: var(--red); height: 100%; width: 0%; transition: 0.5s; }
-
+        .note-area { margin-top: 10px; padding-top: 8px; border-top: 1px solid #F2F2F7; font-size: 13px; color: #666; line-height: 1.4; white-space: pre-wrap; }
         .nav-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); height: 65px; border-radius: 35px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 2000; }
         .nav-item { border: none; background: none; font-size: 24px; opacity: 0.3; transition: 0.3s; }
         .nav-item.active { opacity: 1; transform: scale(1.2); }
-
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: flex-end; z-index: 3000; }
         .modal.active { display: flex; }
         .modal-body { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 30px; max-height: 85vh; overflow-y: auto; }
-        
-        .naver-btn { display: flex; align-items: center; justify-content: center; background: var(--naver); color: white; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: 15px; border: none; width: 100%; font-size: 16px; gap: 8px; }
+        .naver-btn { display: flex; align-items: center; justify-content: center; background: #03C75A; color: white; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: 15px; width: 100%; font-size: 16px; gap: 8px; border:none;}
         .edit-btn { background: #555; color: white; padding: 12px; border-radius: 12px; border: none; width: 100%; margin-top: 10px; font-weight: bold; }
-        .del-btn { background: #fceaea; color: var(--red); padding: 12px; border-radius: 12px; border: none; width: 100%; margin-top: 10px; }
-        .btn-save { background: var(--accent); color: white; padding: 15px; border-radius: 12px; border: none; width: 100%; font-weight: bold; font-size: 16px; }
-
-        input, select, textarea { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #EEE; background: #F9F9F9; font-size: 16px; }
-        textarea { height: 100px; resize: none; }
-        .todo-item { display: flex; align-items: center; padding: 15px; background: white; border-radius: 15px; margin-bottom: 10px; }
-        .todo-item.done { opacity: 0.5; text-decoration: line-through; }
-        #live-rate { font-size: 11px; background: #eee; padding: 2px 8px; border-radius: 10px; margin-left: 5px;}
+        .del-btn { background: #fceaea; color: #E57373; padding: 12px; border-radius: 12px; border: none; width: 100%; margin-top: 10px; }
+        input, textarea { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #EEE; background: #F9F9F9; font-size: 16px; }
+        textarea { height: 80px; resize: none; }
     </style>
 </head>
 <body>
-
     <div class="header">
         <h1><span>SEOUL</span> 2026</h1>
         <div class="date-range">5/27 - 6/2</div>
-    </div>
-
-    <div id="tab-list" class="tab-content" style="display:none">
-        <div class="content">
-            <h2 style="margin-top:20px;">✈️ 航班資訊</h2>
-            <div class="card">
-                <button onclick="openInputModal('f')" style="float:right; border:none; background:none; color:blue; font-size:12px;">編輯</button>
-                <div id="flightInfo" style="font-weight:bold; font-size:18px;">載入中...</div>
-                <div id="flightCountDown" style="font-size:13px; color:var(--red); margin-top:8px;"></div>
-            </div>
-            
-            <div class="day-title-row">
-                <h2>📋 行前準備</h2>
-                <button class="btn-plus" onclick="openInputModal('t')">+</button>
-            </div>
-            <div id="todoList"></div>
-        </div>
     </div>
 
     <div id="tab-plan" class="tab-content">
@@ -96,85 +61,43 @@
         <div class="content">
             <div class="day-title-row">
                 <h2 id="currentDayLabel">Day 1</h2>
-                <button class="btn-plus" onclick="openInputModal('p')">+</button>
+                <button class="btn-plus" onclick="openInputModal()">+</button>
             </div>
             <div id="planList"></div>
         </div>
     </div>
 
-    <div id="tab-wallet" class="tab-content" style="display:none">
-        <div class="content" style="padding-top:20px;">
-            <div class="budget-box">
-                <div style="display:flex; justify-content:space-between; font-size:13px;">
-                    <span>剩餘預算 (TWD) <span id="live-rate">匯率載入中...</span></span>
-                    <span onclick="openInputModal('b')">⚙️ 設定</span>
-                </div>
-                <div id="budgetLeft" style="font-size:32px; font-weight:bold; margin:10px 0;">$ 0</div>
-                <div class="progress-container"><div class="progress-bar" id="budgetBar"></div></div>
-                <div style="display:flex; justify-content:space-between; font-size:12px; opacity:0.8;">
-                    <span id="budgetSpent">已花: $0</span>
-                    <span id="budgetTotal">總額: $0</span>
-                </div>
-            </div>
-            
-            <div style="background:white; border-radius:20px; padding:20px; margin-bottom:20px;">
-                <div style="font-size:12px; color:#999;">快速換算 (₩ KRW)</div>
-                <input type="number" id="krwCalc" placeholder="輸入韓元" oninput="quickCalc(this.value)" style="margin:10px 0 0 0; font-size:24px; font-weight:bold;">
-                <div id="twdResult" style="color:var(--red); font-weight:bold; margin-top:10px;">≈ NT$ 0</div>
-            </div>
-
-            <div class="day-title-row"><h2>消費紀錄</h2><button class="btn-plus" onclick="openInputModal('w')">+</button></div>
-            <div id="walletList"></div>
-        </div>
-    </div>
-
     <div class="nav-bar">
-        <button class="nav-item" onclick="switchTab('list', this)">📝</button>
-        <button class="nav-item active" onclick="switchTab('plan', this)">🧭</button>
-        <button class="nav-item" onclick="switchTab('wallet', this)">💳</button>
+        <button class="nav-item active">🧭</button>
     </div>
 
-    <!-- 詳情彈窗 -->
     <div class="modal" id="detailModal">
         <div class="modal-body">
             <h2 id="detailTitle">景點名稱</h2>
             <div id="detailNote" style="color:#666; margin:15px 0; white-space: pre-wrap;"></div>
             <button id="naverJumpBtn" class="naver-btn">📍 開啟 Naver Map</button>
-            <button id="editItemBtn" class="edit-btn">📝 編輯行程內容</button>
-            <button id="delItemBtn" class="del-btn">🗑️ 刪除此景點</button>
-            <button onclick="closeModal('detailModal')" style="width:100%; border:none; background:none; margin-top:20px; color:#999;">關閉</button>
+            <button id="editItemBtn" class="edit-btn">📝 編輯內容</button>
+            <button id="delItemBtn" class="del-btn">🗑️ 刪除</button>
+            <button onclick="closeM('detailModal')" style="width:100%; border:none; background:none; margin-top:20px; color:#999;">關閉</button>
         </div>
     </div>
 
-    <!-- 輸入/編輯彈窗 -->
     <div class="modal" id="inputModal">
         <div class="modal-body">
-            <h3 id="modalTitle">新增項目</h3>
-            <div id="modalFields"></div>
-            <button class="btn-save" onclick="handleSave()">儲存</button>
-            <button onclick="closeModal('inputModal')" style="width:100%; border:none; background:none; margin-top:15px; color:#999;">取消</button>
+            <h3 id="modalTitle">編輯項目</h3>
+            <label>時間</label><input id="i-time" type="time">
+            <label>名稱</label><input id="i-name" type="text">
+            <label>連結</label><input id="i-link" type="text">
+            <label>註記 (直接顯示在卡片)</label><textarea id="i-note"></textarea>
+            <button class="edit-btn" style="background:var(--accent)" onclick="handleSave()">儲存</button>
+            <button onclick="closeM('inputModal')" style="width:100%; border:none; background:none; margin-top:15px; color:#999;">取消</button>
         </div>
     </div>
 
     <script>
-        let RATE = 0.024;
         let activeDay = 0;
-        let editingIdx = null;
-        let db = JSON.parse(localStorage.getItem('SeoulTrip_Final')) || {
-            plan: [[],[],[],[],[],[],[]], wallet: [], todo: [], budget: 50000, flight: "", flightTime: ""
-        };
-
-        async function fetchRate() {
-            try {
-                const res = await fetch('https://open.er-api.com/v6/latest/KRW');
-                const data = await res.json();
-                RATE = data.rates.TWD;
-                document.getElementById('live-rate').innerText = `1₩ = ${RATE.toFixed(4)} TWD`;
-                renderWallet(); 
-            } catch (e) {
-                document.getElementById('live-rate').innerText = `使用預設匯率: ${RATE}`;
-            }
-        }
+        let editIdx = null;
+        let db = JSON.parse(localStorage.getItem('SeoulTrip_Final')) || { plan: [[],[],[],[],[],[],[]] };
 
         function init() {
             const picker = document.getElementById('datePicker');
@@ -185,146 +108,65 @@
                     <div class="day">${d}</div>
                 </div>
             `).join('');
-            fetchRate();
-            renderAll();
+            render();
         }
 
         function selectDay(i) {
             activeDay = i;
             document.getElementById('currentDayLabel').innerText = `Day ${i+1}`;
             document.querySelectorAll('.date-item').forEach((el, idx) => el.classList.toggle('active', idx===i));
-            renderPlan();
+            render();
         }
 
-        function switchTab(tab, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.getElementById('tab-'+tab).style.display = 'block';
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        // 修改此處：增加註記顯現邏輯
-        function renderPlan() {
+        function render() {
             const list = document.getElementById('planList');
             list.innerHTML = db.plan[activeDay].map((p, i) => `
                 <div class="card" onclick="openDetail(${i})">
                     <span class="time-tag">⏰ ${p.time || '--:--'}</span>
                     <h3 style="margin:0">${p.name}</h3>
-                    ${p.note ? `<div class="note-display">${p.note}</div>` : ''}
+                    ${p.note ? `<div class="note-area">${p.note}</div>` : ''}
                 </div>
             `).join('');
         }
 
         function openDetail(i) {
-            editingIdx = i;
+            editIdx = i;
             const item = db.plan[activeDay][i];
             document.getElementById('detailTitle').innerText = item.name;
             document.getElementById('detailNote').innerText = item.note || '無備註';
-            
-            const btn = document.getElementById('naverJumpBtn');
-            btn.style.display = item.link ? 'flex' : 'none';
-            btn.onclick = () => window.location.href = item.link;
-
-            document.getElementById('editItemBtn').onclick = () => {
-                closeModal('detailModal');
-                openInputModal('p', i);
-            };
-            document.getElementById('delItemBtn').onclick = () => {
-                if(confirm("確定要刪除這個景點嗎？")) {
-                    db.plan[activeDay].splice(i, 1);
-                    save(); renderPlan(); closeModal('detailModal');
-                }
-            };
-            
+            const nBtn = document.getElementById('naverJumpBtn');
+            nBtn.style.display = item.link ? 'flex' : 'none';
+            nBtn.onclick = () => window.location.href = item.link;
+            document.getElementById('editItemBtn').onclick = () => { closeM('detailModal'); openInputModal(i); };
+            document.getElementById('delItemBtn').onclick = () => { if(confirm("刪除？")){ db.plan[activeDay].splice(i,1); save(); render(); closeM('detailModal'); }};
             document.getElementById('detailModal').classList.add('active');
         }
 
-        let mType = '';
-        function openInputModal(type, editIndex = null) {
-            mType = type;
-            editingIdx = editIndex;
-            const f = document.getElementById('modalFields');
-            const title = document.getElementById('modalTitle');
+        function openInputModal(i = null) {
+            editIdx = i;
+            const data = i !== null ? db.plan[activeDay][i] : {time:'', name:'', link:'', note:''};
+            document.getElementById('i-time').value = data.time;
+            document.getElementById('i-name').value = data.name;
+            document.getElementById('i-link').value = data.link;
+            document.getElementById('i-note').value = data.note;
             document.getElementById('inputModal').classList.add('active');
-            
-            if(type==='p') {
-                const data = editIndex !== null ? db.plan[activeDay][editIndex] : {time:'', name:'', link:'', note:''};
-                title.innerText = editIndex !== null ? "編輯景點" : "新增項目";
-                f.innerHTML = `<label>時間</label><input id="i1" type="time" value="${data.time}"><label>名稱</label><input id="i2" value="${data.name}"><label>Naver連結</label><input id="i3" value="${data.link}"><label>備註 (會直接顯示在卡片上)</label><textarea id="i4">${data.note || ''}</textarea>`;
-            } else if(type==='w') {
-                f.innerHTML = `<label>日期</label><input id="i1" type="date" value="${new Date().toISOString().split('T')[0]}"><label>品項</label><input id="i2"><label>金額 (KRW)</label><input id="i3" type="number">`;
-            } else if(type==='t') {
-                f.innerHTML = `<label>準備項目</label><input id="i1">`;
-            } else if(type==='f') {
-                f.innerHTML = `<label>航班號</label><input id="i1" value="${db.flight}"><label>起飛時間</label><input id="i2" type="datetime-local" value="${db.flightTime}">`;
-            } else if(type==='b') {
-                f.innerHTML = `<label>預算 (TWD)</label><input id="i1" type="number" value="${db.budget}">`;
-            }
         }
 
         function handleSave() {
-            const v1 = document.getElementById('i1')?.value;
-            if(mType==='p') {
-                const newItem = {time:v1, name:document.getElementById('i2').value, link:document.getElementById('i3').value, note:document.getElementById('i4').value};
-                if(editingIdx !== null) {
-                    db.plan[activeDay][editingIdx] = newItem;
-                } else {
-                    db.plan[activeDay].push(newItem);
-                }
-                db.plan[activeDay].sort((a,b)=>a.time>b.time?1:-1);
-            } else if(mType==='w') {
-                db.wallet.push({date:v1, name:document.getElementById('i2').value, amt:document.getElementById('i3').value});
-            } else if(mType==='t') {
-                db.todo.push({text:v1, done:false});
-            } else if(mType==='f') {
-                db.flight = v1; db.flightTime = document.getElementById('i2').value;
-            } else if(mType==='b') {
-                db.budget = Number(v1);
-            }
-            save(); closeModal('inputModal'); renderAll();
-            editingIdx = null;
+            const newItem = {
+                time: document.getElementById('i-time').value,
+                name: document.getElementById('i-name').value,
+                link: document.getElementById('i-link').value,
+                note: document.getElementById('i-note').value
+            };
+            if(editIdx !== null) db.plan[activeDay][editIdx] = newItem;
+            else db.plan[activeDay].push(newItem);
+            db.plan[activeDay].sort((a,b) => a.time > b.time ? 1 : -1);
+            save(); render(); closeM('inputModal');
         }
 
-        function renderWallet() {
-            let spent = 0;
-            const list = document.getElementById('walletList');
-            list.innerHTML = db.wallet.map((w, idx) => {
-                const twd = Math.round(w.amt * RATE);
-                spent += twd;
-                return `<div class="card" onclick="deleteWallet(${idx})"><b>${w.name}</b><br><span style="color:red">₩${Number(w.amt).toLocaleString()}</span> <small>(NT$ ${twd})</small></div>`;
-            }).join('');
-            document.getElementById('budgetLeft').innerText = `$ ${(db.budget - spent).toLocaleString()}`;
-            document.getElementById('budgetSpent').innerText = `已花: $${spent.toLocaleString()}`;
-            document.getElementById('budgetTotal').innerText = `總額: $${db.budget.toLocaleString()}`;
-            document.getElementById('budgetBar').style.width = Math.min((spent/db.budget)*100, 100) + '%';
-        }
-
-        function deleteWallet(idx) {
-            if(confirm("刪除這筆支出紀錄？")) { db.wallet.splice(idx,1); save(); renderWallet(); }
-        }
-
-        function renderAll() {
-            renderPlan(); renderWallet();
-            document.getElementById('todoList').innerHTML = db.todo.map((t,i)=>`
-                <div class="todo-item ${t.done?'done':''}">
-                    <span onclick="toggleT(${i})" style="flex:1">${t.done?'✅':'☐'} ${t.text}</span>
-                    <span onclick="deleteTodo(${i})" style="color:#CCC; font-size:12px;">刪除</span>
-                </div>`).join('');
-            document.getElementById('flightInfo').innerText = db.flight ? `航班：${db.flight}` : "尚未設定航班";
-            updateTimer();
-        }
-
-        function updateTimer() {
-            if(!db.flightTime) return;
-            const diff = (new Date(db.flightTime) - new Date()) / 1000 / 60;
-            document.getElementById('flightCountDown').innerText = diff > 0 ? `🛫 距離起飛：${Math.floor(diff/60)}時 ${Math.floor(diff%60)}分` : "旅途愉快！";
-        }
-
-        function quickCalc(v) { document.getElementById('twdResult').innerText = `≈ NT$ ${Math.round(v * RATE).toLocaleString()}`; }
-        function toggleT(i) { db.todo[i].done = !db.todo[i].done; save(); renderAll(); }
-        function deleteTodo(i) { db.todo.splice(i,1); save(); renderAll(); }
         function save() { localStorage.setItem('SeoulTrip_Final', JSON.stringify(db)); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function closeM(id) { document.getElementById(id).classList.remove('active'); }
         init();
     </script>
 </body>
